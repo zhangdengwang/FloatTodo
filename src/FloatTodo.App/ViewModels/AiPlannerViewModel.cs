@@ -20,6 +20,8 @@ public sealed class AiPlannerViewModel : INotifyPropertyChanged
     private readonly AiPlannerService _service;
     private string _projectDescription = string.Empty;
     private bool _isPlanning;
+    private string _currentBatchProjectId = string.Empty;
+    private string _currentBatchProjectName = string.Empty;
 
     public AiPlannerViewModel(MainViewModel main, AiPlannerService service)
     {
@@ -86,6 +88,14 @@ public sealed class AiPlannerViewModel : INotifyPropertyChanged
         {
             var plan = await _service.PlanProjectAsync(ProjectDescription).ConfigureAwait(true);
 
+            // Determine project title and id for this batch
+            var title = !string.IsNullOrWhiteSpace(plan.ProjectTitle)
+                ? plan.ProjectTitle.Trim()
+                : (ProjectDescription.Length <= 20 ? ProjectDescription.Trim() : ProjectDescription.Substring(0, 20).Trim());
+
+            _currentBatchProjectName = title;
+            _currentBatchProjectId = Guid.NewGuid().ToString();
+
             // Map AI tasks into CandidateTask instances.
             foreach (var t in plan.Tasks)
             {
@@ -145,7 +155,11 @@ public sealed class AiPlannerViewModel : INotifyPropertyChanged
                 Priority = c.Priority,
                 Status = FloatTodo.App.Models.TaskStatus.Todo,
                 CreatedAt = DateTime.Now,
-                DueTime = null
+                DueTime = null,
+                ProjectId = string.IsNullOrWhiteSpace(_currentBatchProjectId) ? Guid.NewGuid().ToString() : _currentBatchProjectId,
+                ProjectName = string.IsNullOrWhiteSpace(_currentBatchProjectName) ? (ProjectDescription.Length <= 20 ? ProjectDescription.Trim() : ProjectDescription.Substring(0, 20).Trim()) : _currentBatchProjectName,
+                Phase = c.Phase,
+                EstimatedMinutes = c.EstimatedMinutes
             };
 
             _main.AddTaskItem(task);

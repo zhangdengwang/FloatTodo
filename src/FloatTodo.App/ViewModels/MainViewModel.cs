@@ -1,5 +1,7 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Collections.Generic;
+using System.Linq;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
@@ -31,6 +33,10 @@ public sealed class MainViewModel : INotifyPropertyChanged
         CompleteTaskCommand = new RelayCommand(parameter => CompleteTask((TaskItem)parameter!), _ => true);
 
         Tasks = new ObservableCollection<TaskItem>();
+        ProjectProgressList = new ObservableCollection<ProjectProgressItem>();
+
+        // Keep progress in sync when tasks collection changes
+        Tasks.CollectionChanged += TasksOnCollectionChanged;
 
         // Load persisted tasks on startup. Failures fall back to empty list.
         try
@@ -39,6 +45,11 @@ public sealed class MainViewModel : INotifyPropertyChanged
             foreach (var t in items)
             {
                 Tasks.Add(t);
+            }
+            // Attach handlers for loaded tasks
+            foreach (var t in Tasks)
+            {
+                AttachTaskHandler(t);
             }
         }
         catch
@@ -49,7 +60,14 @@ public sealed class MainViewModel : INotifyPropertyChanged
         DailyRecords = new DailyRecordsViewModel();
         AiSettings = new ApiSettingsViewModel(_apiSettingsService);
         AiPlanner = new AiPlannerViewModel(this, new AiPlannerService(_apiSettingsService));
+
+        // initial calculation
+        RecalculateProjectProgress();
     }
+
+    public ObservableCollection<ProjectProgressItem> ProjectProgressList { get; }
+
+    public bool HasProjectProgress => ProjectProgressList.Any();
 
     public ObservableCollection<TaskItem> Tasks { get; }
 
@@ -147,8 +165,10 @@ public sealed class MainViewModel : INotifyPropertyChanged
         };
 
         Tasks.Insert(0, task);
+        AttachTaskHandler(task);
         ClearNewTaskForm();
         SaveTasks();
+        RecalculateProjectProgress();
     }
 
     private void DeleteTask(TaskItem? task)
@@ -157,6 +177,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         {
             Tasks.Remove(task);
             SaveTasks();
+            RecalculateProjectProgress();
         }
     }
 
@@ -171,6 +192,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         task.Status = FloatTodo.App.Models.TaskStatus.Done;
         task.CompletedAt = DateTime.Now;
         SaveTasks();
+        RecalculateProjectProgress();
     }
 
     private void SaveTasks()
@@ -202,7 +224,95 @@ public sealed class MainViewModel : INotifyPropertyChanged
     {
         if (task is null) return;
         Tasks.Insert(0, task);
+        AttachTaskHandler(task);
         SaveTasks();
+        RecalculateProjectProgress();
+    }
+
+    private void TasksOnCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    {
+        if (e.NewItems != null)
+        {
+            foreach (TaskItem t in e.NewItems)
+            {
+                AttachTaskHandler(t);
+            }
+        }
+
+        if (e.OldItems != null)
+        {
+            foreach (TaskItem t in e.OldItems)
+            {
+                t.PropertyChanged -= TaskOnPropertyChanged;
+            }
+        }
+
+        RecalculateProjectProgress();
+    }
+
+    private void AttachTaskHandler(TaskItem t)
+    {
+        if (t == null) return;
+        t.PropertyChanged -= TaskOnPropertyChanged;
+        t.PropertyChanged += TaskOnPropertyChanged;
+    }
+
+    private void TaskOnPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(TaskItem.Status) || e.PropertyName == nameof(TaskItem.ProjectName))
+        {
+            RecalculateProjectProgress();
+        }
+    }
+
+    private void RecalculateProjectProgress()
+    {
+        try
+        {
+            var groups = Tasks.Where(t => !string.IsNullOrWhiteSpace(t.ProjectName))
+                .GroupBy(t => new { t.ProjectId, t.ProjectName })
+                .Select(g => new
+                {
+                    g.Key.ProjectId,
+                    g.Key.ProjectName,
+                    Total = g.Count(),
+                    Completed = g.Count(t => t.Status == FloatTodo.App.Models.TaskStatus.Done)
+                })
+                .ToList();
+
+            // Update ProjectProgressList to match groups
+            // Remove entries not present
+            var existingIds = ProjectProgressList.Select(p => p.ProjectId).ToList();
+            foreach (var id in existingIds)
+            {
+                if (!groups.Any(g => g.ProjectId == id))
+                {
+                    var rem = ProjectProgressList.FirstOrDefault(p => p.ProjectId == id);
+                    if (rem != null) ProjectProgressList.Remove(rem);
+                }
+            }
+
+            foreach (var g in groups)
+            {
+                var item = ProjectProgressList.FirstOrDefault(p => p.ProjectId == g.ProjectId);
+                if (item == null)
+                {
+                    item = new ProjectProgressItem { ProjectId = g.ProjectId, ProjectName = g.ProjectName, Total = g.Total, Completed = g.Completed };
+                    ProjectProgressList.Add(item);
+                }
+                else
+                {
+                    item.ProjectName = g.ProjectName;
+                    item.Total = g.Total;
+                    item.Completed = g.Completed;
+                }
+            }
+            OnPropertyChanged(nameof(HasProjectProgress));
+        }
+        catch
+        {
+            // Swallow any progress calculation errors to avoid breaking UI.
+        }
     }
 
     private void OnPropertyChanged([CallerMemberName] string? propertyName = null)

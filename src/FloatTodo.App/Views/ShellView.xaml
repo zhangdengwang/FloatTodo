@@ -117,6 +117,74 @@
                     </StackPanel>
                 </Border>
 
+                <!-- Project progress summary -->
+                <Border Margin="0,0,0,12"
+                        Padding="12"
+                        Background="White"
+                        CornerRadius="12"
+                        BorderBrush="#F0F0F0"
+                        BorderThickness="1">
+                    <StackPanel>
+                        <TextBlock Text="项目进度"
+                                   FontSize="15"
+                                   FontWeight="SemiBold"
+                                   Foreground="#2F2F2F"/>
+
+                        <TextBlock Margin="0,8,0,0"
+                                   Text="暂无项目进度"
+                                   Foreground="#6F6F6F">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility"
+                                            Value="Visible"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding HasProjectProgress}"
+                                                     Value="True">
+                                            <Setter Property="Visibility"
+                                                    Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+
+                        <ItemsControl ItemsSource="{Binding ProjectProgressList}"
+                                      Margin="0,8,0,0">
+                            <ItemsControl.Style>
+                                <Style TargetType="ItemsControl">
+                                    <Setter Property="Visibility"
+                                            Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding HasProjectProgress}"
+                                                     Value="True">
+                                            <Setter Property="Visibility"
+                                                    Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ItemsControl.Style>
+
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Margin="0,0,0,8">
+                                        <StackPanel Orientation="Horizontal"
+                                                VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding DisplayProgressText}"
+                                                    FontWeight="SemiBold"
+                                                    Foreground="#6F6F6F"
+                                                    TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                        <ProgressBar Value="{Binding Percentage}"
+                                                     Maximum="100"
+                                                     Height="6"
+                                                     Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
                 <!-- API 设置 区域 -->
                 <Border Margin="0,0,0,12"
                         Padding="12"
@@ -134,7 +202,7 @@
                                    Foreground="#6F6F6F"
                                    Margin="0,8,0,0"/>
                         <StackPanel Orientation="Horizontal"
-                                Margin="0,8,0,0">
+                                    Margin="0,8,0,0">
                             <Grid Width="240">
                                 <TextBox Text="{Binding AiSettings.ApiKey, UpdateSourceTrigger=PropertyChanged}"
                                          Padding="6"
@@ -158,7 +226,7 @@
                                    Foreground="#6F6F6F"
                                    Margin="0,4,0,0"/>
                         <StackPanel Orientation="Horizontal"
-                                Margin="0,8,0,0">
+                                    Margin="0,8,0,0">
                             <Button Content="保存 Key"
                                     Padding="8"
                                     Command="{Binding AiSettings.SaveCommand}"/>

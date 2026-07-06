@@ -98,6 +98,64 @@ public sealed class TaskItem : INotifyPropertyChanged
         }
     }
 
+    // Project-related metadata (optional)
+    private string _projectId = string.Empty;
+    private string _projectName = string.Empty;
+    private string _phase = string.Empty;
+    private int _estimatedMinutes;
+
+    public string ProjectId
+    {
+        get => _projectId;
+        set
+        {
+            if (_projectId != value)
+            {
+                _projectId = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public string ProjectName
+    {
+        get => _projectName;
+        set
+        {
+            if (_projectName != value)
+            {
+                _projectName = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public string Phase
+    {
+        get => _phase;
+        set
+        {
+            if (_phase != value)
+            {
+                _phase = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public int EstimatedMinutes
+    {
+        get => _estimatedMinutes;
+        set
+        {
+            if (_estimatedMinutes != value)
+            {
+                _estimatedMinutes = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
     public event PropertyChangedEventHandler? PropertyChanged;
 
     private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
