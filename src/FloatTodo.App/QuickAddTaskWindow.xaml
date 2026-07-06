@@ -3,8 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="新增任务"
         Width="320"
-        Height="340"
-        MinHeight="320"
+        Height="430"
+        MinHeight="410"
         ResizeMode="CanResize"
         WindowStartupLocation="CenterScreen"
         Topmost="True"
@@ -12,6 +12,9 @@
         Background="White">
     <Grid Margin="12">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -29,9 +32,9 @@
                  Height="28"
                  VerticalContentAlignment="Center"/>
 
-        <TextBlock Text="优先级"
-                   FontWeight="Bold"
-                   Grid.Row="2"/>
+        <TextBlock Grid.Row="2"
+                   Text="优先级"
+                   FontWeight="Bold"/>
         <ComboBox x:Name="PriorityComboBox"
                   Grid.Row="3"
                   Margin="0,6,0,12"
@@ -43,15 +46,29 @@
         </ComboBox>
 
         <TextBlock Grid.Row="4"
-                   Text="截止时间 (yyyy-MM-dd HH:mm)"
+                   Text="截止日期"
+                   FontWeight="Bold"/>
+        <DatePicker x:Name="DueDatePicker"
+                    Grid.Row="5"
+                    Margin="0,6,0,12"
+                    Height="28"/>
+
+        <TextBlock Grid.Row="6"
+                   Text="截止时间"
                    FontWeight="Bold"/>
         <TextBox x:Name="DueTimeTextBox"
-                 Grid.Row="5"
-                 Margin="0,6,0,12"
+                 Grid.Row="7"
+                 Margin="0,6,0,4"
                  Height="28"
-                 VerticalContentAlignment="Center"/>
+                 VerticalContentAlignment="Center"
+                 ToolTip="HH:mm，可空；留空时默认为 23:59"/>
+        <TextBlock Grid.Row="8"
+                   Text="HH:mm，可空；选择日期后留空默认为 23:59"
+                   FontSize="11"
+                   Foreground="#666"
+                   Margin="0,0,0,8"/>
 
-        <StackPanel Grid.Row="6"
+        <StackPanel Grid.Row="9"
                     Orientation="Horizontal"
                     HorizontalAlignment="Right"
                     Margin="0,8,0,0">

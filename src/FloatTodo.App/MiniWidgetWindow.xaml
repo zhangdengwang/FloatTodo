@@ -35,13 +35,13 @@
             </MenuItem>
             <MenuItem Header="日常记录">
                 <MenuItem x:Name="DrinkWaterMenuItem"
-                          Header="喝水 +1（次数：0，上次：未记录）"
+                          Header="喝水 +1（次数：0，上次：未记录，阈值：60分钟）"
                           Click="DrinkWaterMenuItem_Click"/>
                 <MenuItem x:Name="RestEyesMenuItem"
-                          Header="休息眼睛 +1（次数：0，上次：未记录）"
+                          Header="休息眼睛 +1（次数：0，上次：未记录，阈值：45分钟）"
                           Click="RestEyesMenuItem_Click"/>
                 <MenuItem x:Name="StandUpMenuItem"
-                          Header="起身活动 +1（次数：0，上次：未记录）"
+                          Header="起身活动 +1（次数：0，上次：未记录，阈值：90分钟）"
                           Click="StandUpMenuItem_Click"/>
                 <MenuItem Header="查看日常记录..."
                           Click="OpenDailyRecords_Click"/>
@@ -104,6 +104,25 @@
                                HorizontalAlignment="Center"
                                VerticalAlignment="Center"
                                FontSize="11"/>
+                </Border>
+
+                <Border x:Name="ReminderRoot"
+                        Background="#DDFFFFFF"
+                        BorderBrush="#66000000"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="7,3"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Bottom"
+                        Margin="2"
+                        Visibility="Collapsed">
+                    <TextBlock x:Name="ReminderText"
+                               Text="请喝水"
+                               Foreground="#222"
+                               FontSize="12"
+                               FontWeight="SemiBold"
+                               TextTrimming="CharacterEllipsis"
+                               MaxWidth="104"/>
                 </Border>
             </Grid>
         </Border>

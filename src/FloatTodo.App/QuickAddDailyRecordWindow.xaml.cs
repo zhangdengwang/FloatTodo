@@ -24,6 +24,19 @@ public partial class QuickAddDailyRecordWindow : Window
             return;
         }
 
+        int? reminderThresholdMinutes = null;
+        var thresholdText = ReminderThresholdTextBox.Text.Trim();
+        if (!string.IsNullOrEmpty(thresholdText))
+        {
+            if (!int.TryParse(thresholdText, out var parsedThreshold) || parsedThreshold <= 0)
+            {
+                MessageBox.Show(this, "提醒阈值必须是正整数", "提示", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            reminderThresholdMinutes = parsedThreshold;
+        }
+
         DailyRecordsViewModel recordsViewModel;
         if (Application.Current is App app)
         {
@@ -42,7 +55,11 @@ public partial class QuickAddDailyRecordWindow : Window
             recordsViewModel = new DailyRecordsViewModel();
         }
 
-        if (!recordsViewModel.AddRecordByName(name, string.Empty, string.Empty))
+        if (!recordsViewModel.AddRecordByName(
+                name,
+                string.Empty,
+                string.Empty,
+                reminderThresholdMinutes))
         {
             MessageBox.Show(this, "记录项已存在", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
             return;

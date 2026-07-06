@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Linq;
 using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 using FloatTodo.App.ViewModels;
 using FloatTodo.App.Services;
 using FloatTodo.App.Models;
@@ -14,11 +15,23 @@ public partial class MiniWidgetWindow : Window
     public event EventHandler? ToggleMainPanelRequested;
     public event EventHandler? ExitRequested;
     private QuickDailyRecordsWindow? _quickDailyRecordsWindow;
+    private readonly DispatcherTimer _reminderTimer;
 
     public MiniWidgetWindow()
     {
         InitializeComponent();
-        Loaded += (_, _) => RefreshPetState();
+        _reminderTimer = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromSeconds(30)
+        };
+        _reminderTimer.Tick += (_, _) => RefreshDailyReminderState();
+        Loaded += (_, _) =>
+        {
+            _ = new DailyRecordsViewModel();
+            RefreshPetState();
+            RefreshDailyReminderState();
+            _reminderTimer.Start();
+        };
     }
 
     protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
@@ -176,6 +189,9 @@ public partial class MiniWidgetWindow : Window
         var w = new QuickAddDailyRecordWindow();
         w.Owner = this;
         w.ShowDialog();
+        RefreshDailyRecordMenuHeaders();
+        RefreshDailyReminderState();
+        _quickDailyRecordsWindow?.RefreshRecords();
     }
 
     private void OpenDailyRecords_Click(object sender, RoutedEventArgs e)
@@ -231,6 +247,7 @@ public partial class MiniWidgetWindow : Window
             }
 
             RefreshDailyRecordMenuHeaders();
+            RefreshDailyReminderState();
             _quickDailyRecordsWindow?.RefreshRecords();
         }
         catch (Exception ex)
@@ -248,9 +265,7 @@ public partial class MiniWidgetWindow : Window
     {
         try
         {
-            var records = Application.Current is App app && app.GetMainViewModel() is { } mainViewModel
-                ? mainViewModel.DailyRecords.Records.ToList()
-                : new DailyRecordStorageService().Load();
+            var records = GetDailyRecordsSnapshot();
 
             DrinkWaterMenuItem.Header = BuildDailyRecordMenuHeader("喝水", records);
             RestEyesMenuItem.Header = BuildDailyRecordMenuHeader("休息眼睛", records);
@@ -269,7 +284,62 @@ public partial class MiniWidgetWindow : Window
         var record = records.FirstOrDefault(r => string.Equals(r.Name, name, StringComparison.Ordinal));
         var count = record?.LastRecordTime?.Date == DateTime.Today ? record.TodayCount : 0;
         var lastRecordTime = record?.LastRecordTime?.ToString("HH:mm") ?? "未记录";
-        return $"{name} +1（次数：{count}，上次：{lastRecordTime}）";
+        var threshold = record?.ReminderThresholdMinutes
+            ?? DailyRecordsViewModel.GetDefaultReminderThresholdMinutes(name);
+        var thresholdText = threshold is > 0 ? $"{threshold}分钟" : "未启用";
+        return $"{name} +1（次数：{count}，上次：{lastRecordTime}，阈值：{thresholdText}）";
+    }
+
+    private static List<DailyRecordItem> GetDailyRecordsSnapshot()
+    {
+        return Application.Current is App app && app.GetMainViewModel() is { } mainViewModel
+            ? mainViewModel.DailyRecords.Records.ToList()
+            : new DailyRecordStorageService().Load();
+    }
+
+    private void RefreshDailyReminderState()
+    {
+        try
+        {
+            var records = GetDailyRecordsSnapshot();
+            var now = DateTime.Now;
+            DailyRecordItem? earliestReminder = null;
+            var earliestTriggerTime = DateTime.MaxValue;
+
+            foreach (var record in records)
+            {
+                if (record.ReminderThresholdMinutes is not > 0)
+                {
+                    continue;
+                }
+
+                var triggerTime = record.LastRecordTime.HasValue
+                    ? record.LastRecordTime.Value.AddMinutes(record.ReminderThresholdMinutes.Value)
+                    : DateTime.MinValue;
+
+                if (now < triggerTime || triggerTime >= earliestTriggerTime)
+                {
+                    continue;
+                }
+
+                earliestReminder = record;
+                earliestTriggerTime = triggerTime;
+            }
+
+            if (earliestReminder == null)
+            {
+                ReminderRoot.Visibility = Visibility.Collapsed;
+                ReminderText.Text = string.Empty;
+                return;
+            }
+
+            ReminderText.Text = $"请{earliestReminder.Name}";
+            ReminderRoot.Visibility = Visibility.Visible;
+        }
+        catch
+        {
+            ReminderRoot.Visibility = Visibility.Collapsed;
+        }
     }
 
     private void OpenQuickAddTaskWindow_Click(object sender, RoutedEventArgs e)
@@ -309,6 +379,7 @@ public partial class MiniWidgetWindow : Window
 
     private void MiniWidgetWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
     {
+        _reminderTimer.Stop();
         Application.Current.Shutdown();
     }
 

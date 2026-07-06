@@ -14,6 +14,7 @@ public sealed class DailyRecordItem : INotifyPropertyChanged
     private string _iconText = string.Empty;
     private int _todayCount;
     private DateTime? _lastRecordTime;
+    private int? _reminderThresholdMinutes;
     private DateTime _createdAt = DateTime.Now;
     private DateTime? _updatedAt;
 
@@ -47,6 +48,19 @@ public sealed class DailyRecordItem : INotifyPropertyChanged
     {
         get => _lastRecordTime;
         set { if (_lastRecordTime != value) { _lastRecordTime = value; OnPropertyChanged(); OnPropertyChanged(nameof(TimeSinceLastRecord)); } }
+    }
+
+    public int? ReminderThresholdMinutes
+    {
+        get => _reminderThresholdMinutes;
+        set
+        {
+            if (_reminderThresholdMinutes != value)
+            {
+                _reminderThresholdMinutes = value;
+                OnPropertyChanged();
+            }
+        }
     }
 
     public DateTime CreatedAt

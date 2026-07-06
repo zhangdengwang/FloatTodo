@@ -27,33 +27,25 @@ public sealed class DailyRecordsViewModel : INotifyPropertyChanged
         AddRecordCommand = new RelayCommand(_ => AddRecord(), _ => !string.IsNullOrWhiteSpace(NewRecordName));
         IncrementCommand = new RelayCommand(param => IncrementRecord((DailyRecordItem)param!), _ => true);
 
-        // Load existing records or initialize default.
+        var needsSave = false;
         var items = _storage.Load();
-        if (items == null || items.Count == 0)
+        foreach (var record in items)
         {
-            var defaultItem = new DailyRecordItem
+            if (record.LastRecordTime is null || record.LastRecordTime.Value.Date != DateTime.Today)
             {
-                Name = "喝水",
-                Description = "记录今日喝水次数",
-                IconText = "💧",
-                TodayCount = 0,
-                LastRecordTime = null,
-                UpdatedAt = null
-            };
-            Records.Add(defaultItem);
-            Save();
-        }
-        else
-        {
-            // Ensure today's counts are reset if last record was not today
-            foreach (var r in items)
-            {
-                if (r.LastRecordTime is null || r.LastRecordTime.Value.Date != DateTime.Today)
-                {
-                    r.TodayCount = 0;
-                }
-                Records.Add(r);
+                record.TodayCount = 0;
             }
+
+            Records.Add(record);
+        }
+
+        needsSave |= EnsureDefaultRecord("喝水", "记录今日喝水次数", "💧", 60);
+        needsSave |= EnsureDefaultRecord("休息眼睛", "记录今日休息眼睛次数", "👀", 45);
+        needsSave |= EnsureDefaultRecord("起身活动", "记录今日起身活动次数", "🦶", 90);
+
+        if (needsSave)
+        {
+            Save();
         }
     }
 
@@ -80,7 +72,11 @@ public sealed class DailyRecordsViewModel : INotifyPropertyChanged
     public ICommand AddRecordCommand { get; }
     public ICommand IncrementCommand { get; }
 
-    public bool AddRecordByName(string name, string description, string iconText)
+    public bool AddRecordByName(
+        string name,
+        string description,
+        string iconText,
+        int? reminderThresholdMinutes = null)
     {
         var trimmedName = name?.Trim() ?? string.Empty;
         if (string.IsNullOrWhiteSpace(trimmedName))
@@ -100,6 +96,7 @@ public sealed class DailyRecordsViewModel : INotifyPropertyChanged
             IconText = iconText?.Trim() ?? string.Empty,
             TodayCount = 0,
             LastRecordTime = null,
+            ReminderThresholdMinutes = reminderThresholdMinutes,
             UpdatedAt = DateTime.Now
         });
 
@@ -125,6 +122,7 @@ public sealed class DailyRecordsViewModel : INotifyPropertyChanged
                 IconText = iconText,
                 TodayCount = 0,
                 LastRecordTime = null,
+                ReminderThresholdMinutes = GetDefaultReminderThresholdMinutes(name),
                 UpdatedAt = null
             };
             Records.Add(item);
@@ -145,6 +143,17 @@ public sealed class DailyRecordsViewModel : INotifyPropertyChanged
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
+
+    public static int? GetDefaultReminderThresholdMinutes(string name)
+    {
+        return name switch
+        {
+            "喝水" => 60,
+            "休息眼睛" => 45,
+            "起身活动" => 90,
+            _ => null
+        };
+    }
 
     private void AddRecord()
     {
@@ -176,6 +185,37 @@ public sealed class DailyRecordsViewModel : INotifyPropertyChanged
         item.LastRecordTime = now;
         item.UpdatedAt = now;
         Save();
+    }
+
+    private bool EnsureDefaultRecord(
+        string name,
+        string description,
+        string iconText,
+        int reminderThresholdMinutes)
+    {
+        var record = Records.FirstOrDefault(item => string.Equals(item.Name, name, StringComparison.Ordinal));
+        if (record == null)
+        {
+            Records.Add(new DailyRecordItem
+            {
+                Name = name,
+                Description = description,
+                IconText = iconText,
+                TodayCount = 0,
+                LastRecordTime = null,
+                ReminderThresholdMinutes = reminderThresholdMinutes,
+                UpdatedAt = null
+            });
+            return true;
+        }
+
+        if (record.ReminderThresholdMinutes is null)
+        {
+            record.ReminderThresholdMinutes = reminderThresholdMinutes;
+            return true;
+        }
+
+        return false;
     }
 
     private bool Save()
