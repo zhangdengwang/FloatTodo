@@ -49,16 +49,15 @@ public partial class QuickAiBreakdownWindow : Window
 
     private void GenerateButton_Click(object sender, RoutedEventArgs e)
     {
-        // Set the project description from text boxes before starting
+        _vm.ProjectName = ProjectNameBox.Text?.Trim() ?? string.Empty;
         _vm.ProjectDescription = ProjectDescBox.Text?.Trim() ?? string.Empty;
 
-        if (string.IsNullOrWhiteSpace(ProjectNameBox.Text))
+        if (string.IsNullOrWhiteSpace(_vm.ProjectName))
         {
             MessageBox.Show(this, "请填写项目名称。", "提示", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
-        // Kick off async generation via command
         if (_vm.GenerateCommand.CanExecute(null))
         {
             _vm.GenerateCommand.Execute(null);
@@ -67,7 +66,8 @@ public partial class QuickAiBreakdownWindow : Window
 
     private void AddSelectedButton_Click(object sender, RoutedEventArgs e)
     {
-        // Proxy to viewmodel command and close on success
+        _vm.ProjectName = ProjectNameBox.Text?.Trim() ?? string.Empty;
+
         if (_vm.AddSelectedToTasksCommand.CanExecute(null))
         {
             _vm.AddSelectedToTasksCommand.Execute(null);

@@ -18,7 +18,7 @@
         MouseLeftButtonUp="Window_MouseLeftButtonUp"
         Closing="MiniWidgetWindow_Closing">
     <Window.ContextMenu>
-        <ContextMenu>
+        <ContextMenu Opened="ContextMenu_Opened">
             <MenuItem Header="任务">
                 <MenuItem Header="新增任务..."
                           Click="OpenQuickAddTaskWindow_Click"/>
@@ -34,11 +34,14 @@
                           Click="ViewAiCandidates_Click"/>
             </MenuItem>
             <MenuItem Header="日常记录">
-                <MenuItem Header="喝水 +1"
+                <MenuItem x:Name="DrinkWaterMenuItem"
+                          Header="喝水 +1（次数：0，上次：未记录）"
                           Click="DrinkWaterMenuItem_Click"/>
-                <MenuItem Header="休息眼睛 +1"
+                <MenuItem x:Name="RestEyesMenuItem"
+                          Header="休息眼睛 +1（次数：0，上次：未记录）"
                           Click="RestEyesMenuItem_Click"/>
-                <MenuItem Header="起身活动 +1"
+                <MenuItem x:Name="StandUpMenuItem"
+                          Header="起身活动 +1（次数：0，上次：未记录）"
                           Click="StandUpMenuItem_Click"/>
                 <MenuItem Header="查看日常记录..."
                           Click="OpenDailyRecords_Click"/>

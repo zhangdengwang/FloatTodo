@@ -13,6 +13,7 @@ public partial class MiniWidgetWindow : Window
 {
     public event EventHandler? ToggleMainPanelRequested;
     public event EventHandler? ExitRequested;
+    private QuickDailyRecordsWindow? _quickDailyRecordsWindow;
 
     public MiniWidgetWindow()
     {
@@ -114,9 +115,19 @@ public partial class MiniWidgetWindow : Window
 
     private void OpenDailyRecords_Click(object sender, RoutedEventArgs e)
     {
-        var w = new QuickDailyRecordsWindow();
-        w.Owner = this;
-        w.ShowDialog();
+        if (_quickDailyRecordsWindow is { IsVisible: true })
+        {
+            _quickDailyRecordsWindow.RefreshRecords();
+            _quickDailyRecordsWindow.Activate();
+            return;
+        }
+
+        _quickDailyRecordsWindow = new QuickDailyRecordsWindow
+        {
+            Owner = this
+        };
+        _quickDailyRecordsWindow.Closed += (_, _) => _quickDailyRecordsWindow = null;
+        _quickDailyRecordsWindow.Show();
     }
 
     private void DrinkWaterMenuItem_Click(object sender, RoutedEventArgs e)
@@ -136,23 +147,64 @@ public partial class MiniWidgetWindow : Window
 
     private void AddDailyRecord(string name, string description, string iconText)
     {
-        if (Application.Current is not App app)
+        try
         {
-            MessageBox.Show(this, $"{name} +1 已记录", "FloatTodo", MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
-        }
+            DailyRecordsViewModel recordsViewModel;
+            if (Application.Current is App app && app.GetMainViewModel() is { } mainViewModel)
+            {
+                recordsViewModel = mainViewModel.DailyRecords;
+            }
+            else
+            {
+                recordsViewModel = new DailyRecordsViewModel();
+            }
 
-        var mainViewModel = app.GetMainViewModel();
-        if (mainViewModel != null)
+            if (!recordsViewModel.IncrementRecordByName(name, description, iconText))
+            {
+                MessageBox.Show(this, "日常记录保存失败，请稍后重试。", "FloatTodo", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            RefreshDailyRecordMenuHeaders();
+            _quickDailyRecordsWindow?.RefreshRecords();
+        }
+        catch (Exception ex)
         {
-            mainViewModel.DailyRecords.IncrementRecordByName(name, description, iconText);
-            MessageBox.Show(this, $"{name} +1 已记录", "FloatTodo", MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
+            MessageBox.Show(this, $"日常记录保存失败：{ex.Message}", "FloatTodo", MessageBoxButton.OK, MessageBoxImage.Error);
         }
+    }
 
-        var temp = new DailyRecordsViewModel();
-        temp.IncrementRecordByName(name, description, iconText);
-        MessageBox.Show(this, $"{name} +1 已记录", "FloatTodo", MessageBoxButton.OK, MessageBoxImage.Information);
+    private void ContextMenu_Opened(object sender, RoutedEventArgs e)
+    {
+        RefreshDailyRecordMenuHeaders();
+    }
+
+    private void RefreshDailyRecordMenuHeaders()
+    {
+        try
+        {
+            var records = Application.Current is App app && app.GetMainViewModel() is { } mainViewModel
+                ? mainViewModel.DailyRecords.Records.ToList()
+                : new DailyRecordStorageService().Load();
+
+            DrinkWaterMenuItem.Header = BuildDailyRecordMenuHeader("喝水", records);
+            RestEyesMenuItem.Header = BuildDailyRecordMenuHeader("休息眼睛", records);
+            StandUpMenuItem.Header = BuildDailyRecordMenuHeader("起身活动", records);
+        }
+        catch
+        {
+            DrinkWaterMenuItem.Header = BuildDailyRecordMenuHeader("喝水", []);
+            RestEyesMenuItem.Header = BuildDailyRecordMenuHeader("休息眼睛", []);
+            StandUpMenuItem.Header = BuildDailyRecordMenuHeader("起身活动", []);
+        }
+    }
+
+    private static string BuildDailyRecordMenuHeader(string name, IEnumerable<DailyRecordItem> records)
+    {
+        var record = records.FirstOrDefault(r => string.Equals(r.Name, name, StringComparison.Ordinal));
+        var count = record?.LastRecordTime?.Date == DateTime.Today ? record.TodayCount : 0;
+        var lastRecordTime = record?.LastRecordTime?.ToString("HH:mm") ?? "未记录";
+        return $"{name} +1（次数：{count}，上次：{lastRecordTime}）";
     }
 
     private void OpenQuickAddTaskWindow_Click(object sender, RoutedEventArgs e)

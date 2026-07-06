@@ -107,11 +107,11 @@ public sealed class DailyRecordsViewModel : INotifyPropertyChanged
         return true;
     }
 
-    public void IncrementRecordByName(string name, string description, string iconText)
+    public bool IncrementRecordByName(string name, string description, string iconText)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
-            return;
+            return false;
         }
 
         var now = DateTime.Now;
@@ -141,7 +141,7 @@ public sealed class DailyRecordsViewModel : INotifyPropertyChanged
 
         item.LastRecordTime = now;
         item.UpdatedAt = now;
-        Save();
+        return Save();
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -178,15 +178,16 @@ public sealed class DailyRecordsViewModel : INotifyPropertyChanged
         Save();
     }
 
-    private void Save()
+    private bool Save()
     {
         try
         {
             _storage.Save(Records);
+            return true;
         }
         catch
         {
-            // Ignore save errors for now to avoid crashing the app. Could log later.
+            return false;
         }
     }
 

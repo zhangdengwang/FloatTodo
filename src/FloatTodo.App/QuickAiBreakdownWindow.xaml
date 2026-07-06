@@ -16,89 +16,92 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="42"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Text="项目名称"
-                   FontWeight="Bold"/>
-        <TextBox x:Name="ProjectNameBox"
-                 Grid.Row="1"
-                 Margin="0,6,0,12"
-                 Height="28"/>
+        <StackPanel Grid.Row="0">
+            <TextBlock Text="项目名称"
+                       FontWeight="Bold"/>
+            <TextBox x:Name="ProjectNameBox"
+                     Margin="0,6,0,12"
+                     Height="28"/>
+        </StackPanel>
 
-        <TextBlock Grid.Row="2"
-                   Text="项目描述"
-                   FontWeight="Bold"/>
-        <TextBox Grid.Row="3"
-                 x:Name="ProjectDescBox"
-                 AcceptsReturn="True"
-                 TextWrapping="Wrap"
-                 VerticalScrollBarVisibility="Auto"
-                 Height="160"/>
+        <StackPanel Grid.Row="1">
+            <TextBlock Text="项目描述"
+                       FontWeight="Bold"/>
+            <TextBox x:Name="ProjectDescBox"
+                     Margin="0,6,0,12"
+                     AcceptsReturn="True"
+                     TextWrapping="Wrap"
+                     VerticalScrollBarVisibility="Auto"
+                     Height="120"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="2"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Left">
+            <Button x:Name="GenerateButton"
+                    Content="开始拆解"
+                    Width="120"
+                    Height="30"
+                    Margin="0,0,8,8"
+                    Click="GenerateButton_Click"/>
+            <TextBlock x:Name="StatusText"
+                       Text="正在拆解，请稍候..."
+                       VerticalAlignment="Center"
+                       Visibility="Collapsed"
+                       Foreground="Gray"
+                       Margin="8,0,0,8"/>
+        </StackPanel>
+
+        <ListBox x:Name="CandidatesList"
+                 Grid.Row="3"
+                 Margin="0,4,0,8"
+                 ItemsSource="{Binding Candidates}"
+                 ScrollViewer.VerticalScrollBarVisibility="Auto">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <Border Padding="8"
+                            Margin="4"
+                            Background="#FFF"
+                            CornerRadius="6"
+                            BorderBrush="#EEE"
+                            BorderThickness="1">
+                        <StackPanel Orientation="Horizontal">
+                            <CheckBox IsChecked="{Binding IsSelected}"
+                                      VerticalAlignment="Center"
+                                      Margin="0,0,8,0"/>
+                            <StackPanel>
+                                <TextBlock Text="{Binding Title}"
+                                           FontWeight="SemiBold"/>
+                                <TextBlock>
+                                    <Run Text="优先级: "/>
+                                    <Run Text="{Binding Priority}"/>
+                                    <Run Text="  |  截止: "/>
+                                    <Run Text="无截止时间"/>
+                                </TextBlock>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
 
         <StackPanel Grid.Row="4"
-                    Orientation="Vertical"
-                    Margin="0,10,0,0">
-            <StackPanel Orientation="Horizontal"
-                        HorizontalAlignment="Left">
-                <Button x:Name="GenerateButton"
-                        Content="开始拆解"
-                        Width="120"
-                        Height="30"
-                        Margin="0,0,8,0"
-                        Click="GenerateButton_Click"/>
-                <TextBlock x:Name="StatusText"
-                           Text="正在拆解，请稍候..."
-                           VerticalAlignment="Center"
-                           Visibility="Collapsed"
-                           Foreground="Gray"
-                           Margin="8,0"/>
-            </StackPanel>
-
-            <ListBox x:Name="CandidatesList"
-                     Margin="0,12,0,8"
-                     ItemsSource="{Binding Candidates}">
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <Border Padding="8"
-                                Margin="4"
-                                Background="#FFF"
-                                CornerRadius="6"
-                                BorderBrush="#EEE"
-                                BorderThickness="1">
-                            <StackPanel Orientation="Horizontal">
-                                <CheckBox IsChecked="{Binding IsSelected}"
-                                          VerticalAlignment="Center"
-                                          Margin="0,0,8,0"/>
-                                <StackPanel>
-                                    <TextBlock Text="{Binding Title}"
-                                               FontWeight="SemiBold"/>
-                                    <TextBlock>
-                                        <Run Text="优先级: "/>
-                                        <Run Text="{Binding Priority}"/>
-                                        <Run Text="  |  截止: "/>
-                                        <Run Text="无截止时间"/>
-                                    </TextBlock>
-                                </StackPanel>
-                            </StackPanel>
-                        </Border>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
-
-            <StackPanel Orientation="Horizontal"
-                        HorizontalAlignment="Right">
-                <Button Content="取消"
-                        Width="80"
-                        Height="30"
-                        Margin="0,0,8,0"
-                        Click="CancelButton_Click"/>
-                <Button x:Name="AddSelectedButton"
-                        Content="加入选中任务"
-                        Width="120"
-                        Height="30"
-                        Click="AddSelectedButton_Click"/>
-            </StackPanel>
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Bottom">
+            <Button x:Name="AddSelectedButton"
+                    Content="加入选中任务"
+                    Width="120"
+                    Height="30"
+                    Margin="0,0,8,0"
+                    Click="AddSelectedButton_Click"/>
+            <Button Content="取消"
+                    Width="80"
+                    Height="30"
+                    Click="CancelButton_Click"/>
         </StackPanel>
     </Grid>
 </Window>

@@ -1,3 +1,5 @@
+using System;
+using System.Linq;
 using System.Windows;
 using FloatTodo.App.Services;
 
@@ -8,10 +10,10 @@ public partial class QuickDailyRecordsWindow : Window
     public QuickDailyRecordsWindow()
     {
         InitializeComponent();
-        LoadRecords();
+        RefreshRecords();
     }
 
-    private void LoadRecords()
+    public void RefreshRecords()
     {
         var records = new DailyRecordStorageService().Load();
         if (records.Count == 0)
@@ -23,6 +25,11 @@ public partial class QuickDailyRecordsWindow : Window
 
         EmptyText.Visibility = Visibility.Collapsed;
         RecordsList.Visibility = Visibility.Visible;
-        RecordsList.ItemsSource = records;
+        RecordsList.ItemsSource = records.Select(record => new
+        {
+            record.Name,
+            TodayCount = record.LastRecordTime?.Date == DateTime.Today ? record.TodayCount : 0,
+            LastRecordTimeDisplay = record.LastRecordTime?.ToString("yyyy-MM-dd HH:mm") ?? "未记录"
+        }).ToList();
     }
 }

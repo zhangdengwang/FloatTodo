@@ -37,7 +37,7 @@
                                 <TextBlock Margin="0,4,0,0"
                                            Foreground="#666">
                                     <Run Text="最后记录时间："/>
-                                    <Run Text="{Binding LastRecordTime, StringFormat={}{0:yyyy-MM-dd HH:mm}, TargetNullValue=未记录}"/>
+                                    <Run Text="{Binding LastRecordTimeDisplay}"/>
                                 </TextBlock>
                             </StackPanel>
                             <TextBlock Grid.Column="1"

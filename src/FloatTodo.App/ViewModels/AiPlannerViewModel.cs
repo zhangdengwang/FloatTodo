@@ -18,6 +18,7 @@ public sealed class AiPlannerViewModel : INotifyPropertyChanged
 {
     private readonly MainViewModel _main;
     private readonly AiPlannerService _service;
+    private string _projectName = string.Empty;
     private string _projectDescription = string.Empty;
     private bool _isPlanning;
     private string _currentBatchProjectId = string.Empty;
@@ -38,6 +39,19 @@ public sealed class AiPlannerViewModel : INotifyPropertyChanged
     }
 
     public ObservableCollection<CandidateTask> Candidates { get; }
+
+    public string ProjectName
+    {
+        get => _projectName;
+        set
+        {
+            if (_projectName != value)
+            {
+                _projectName = value;
+                OnPropertyChanged();
+            }
+        }
+    }
 
     public string ProjectDescription
     {
@@ -89,9 +103,11 @@ public sealed class AiPlannerViewModel : INotifyPropertyChanged
             var plan = await _service.PlanProjectAsync(ProjectDescription).ConfigureAwait(true);
 
             // Determine project title and id for this batch
-            var title = !string.IsNullOrWhiteSpace(plan.ProjectTitle)
-                ? plan.ProjectTitle.Trim()
-                : (ProjectDescription.Length <= 20 ? ProjectDescription.Trim() : ProjectDescription.Substring(0, 20).Trim());
+            var title = !string.IsNullOrWhiteSpace(ProjectName)
+                ? ProjectName.Trim()
+                : !string.IsNullOrWhiteSpace(plan.ProjectTitle)
+                    ? plan.ProjectTitle.Trim()
+                    : (ProjectDescription.Length <= 20 ? ProjectDescription.Trim() : ProjectDescription[..20].Trim());
 
             _currentBatchProjectName = title;
             _currentBatchProjectId = Guid.NewGuid().ToString();
@@ -135,16 +151,20 @@ public sealed class AiPlannerViewModel : INotifyPropertyChanged
     {
         if (!Candidates.Any())
         {
-            MessageBox.Show("请先拆解项目。", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show("请先拆解项目", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
         var selected = Candidates.Where(c => c.IsSelected && !c.IsAdded).ToList();
         if (selected.Count == 0)
         {
-            MessageBox.Show("请先选择要加入的任务。", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show("请选择要加入的任务", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
+
+        var projectName = !string.IsNullOrWhiteSpace(ProjectName)
+            ? ProjectName.Trim()
+            : _currentBatchProjectName;
 
         foreach (var c in selected)
         {
@@ -157,7 +177,9 @@ public sealed class AiPlannerViewModel : INotifyPropertyChanged
                 CreatedAt = DateTime.Now,
                 DueTime = null,
                 ProjectId = string.IsNullOrWhiteSpace(_currentBatchProjectId) ? Guid.NewGuid().ToString() : _currentBatchProjectId,
-                ProjectName = string.IsNullOrWhiteSpace(_currentBatchProjectName) ? (ProjectDescription.Length <= 20 ? ProjectDescription.Trim() : ProjectDescription.Substring(0, 20).Trim()) : _currentBatchProjectName,
+                ProjectName = string.IsNullOrWhiteSpace(projectName)
+                    ? (ProjectDescription.Length <= 20 ? ProjectDescription.Trim() : ProjectDescription[..20].Trim())
+                    : projectName,
                 Phase = c.Phase,
                 EstimatedMinutes = c.EstimatedMinutes
             };
@@ -167,8 +189,6 @@ public sealed class AiPlannerViewModel : INotifyPropertyChanged
             c.IsSelected = false;
         }
 
-        var count = selected.Count;
-        MessageBox.Show($"已加入 {count} 个任务到待办。", "成功", MessageBoxButton.OK, MessageBoxImage.Information);
         (AddSelectedToTasksCommand as RelayCommand)?.RaiseCanExecuteChanged();
     }
 
