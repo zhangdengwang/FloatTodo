@@ -4,12 +4,12 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="FloatTodo Mini Debug"
-        Width="160"
-        Height="160"
-        WindowStyle="SingleBorderWindow"
-        AllowsTransparency="False"
-        Background="LightYellow"
+        Title="FloatTodo Mini"
+        Width="120"
+        Height="120"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
         ResizeMode="NoResize"
         Topmost="True"
         ShowInTaskbar="True"
@@ -27,17 +27,26 @@
         </ContextMenu>
     </Window.ContextMenu>
     <Grid>
-        <TextBlock Text="FT"
-                   FontSize="28"
-                   FontWeight="Bold"
-                   Foreground="Black"
-                   HorizontalAlignment="Center"
-                   VerticalAlignment="Center"/>
-        <Image Source="pack://application:,,,/Assets/Pet/pet_has_task.png"
-               Width="100"
-               Height="100"
-               Stretch="Uniform"
-               HorizontalAlignment="Center"
-               VerticalAlignment="Center"/>
+        <Border Background="#22FFFFFF"
+                CornerRadius="20"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Width="120"
+                Height="120">
+            <Grid>
+                <TextBlock Text="FT"
+                           FontSize="28"
+                           FontWeight="Bold"
+                           Foreground="Black"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"/>
+                <Image Source="pack://application:,,,/Assets/Pet/pet_has_task.png"
+                       Width="100"
+                       Height="100"
+                       Stretch="Uniform"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"/>
+            </Grid>
+        </Border>
     </Grid>
 </Window>
