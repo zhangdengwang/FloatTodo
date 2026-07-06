@@ -19,10 +19,12 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private DateTime? _newTaskDueTime;
 
     private readonly TaskStorageService _storage;
+    private readonly ApiSettingsService _apiSettingsService;
 
     public MainViewModel()
     {
         _storage = new TaskStorageService();
+        _apiSettingsService = new ApiSettingsService();
 
         AddTaskCommand = new RelayCommand(_ => AddTask(), _ => CanAddTask());
         DeleteTaskCommand = new RelayCommand(parameter => DeleteTask((TaskItem)parameter!), _ => true);
@@ -45,6 +47,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
         // Initialize daily records sub-viewmodel (keeps daily records separate).
         DailyRecords = new DailyRecordsViewModel();
+        AiSettings = new ApiSettingsViewModel(_apiSettingsService);
+        AiPlanner = new AiPlannerViewModel(this, new AiPlannerService(_apiSettingsService));
     }
 
     public ObservableCollection<TaskItem> Tasks { get; }
@@ -52,7 +56,12 @@ public sealed class MainViewModel : INotifyPropertyChanged
     // Expose daily records view model to the view so the UI can bind to it.
     public DailyRecordsViewModel DailyRecords { get; }
 
+    public ApiSettingsViewModel AiSettings { get; }
+
     public TaskPriority[] Priorities { get; } = Enum.GetValues<TaskPriority>();
+
+    // Expose AI planner view model so the view can bind to it.
+    public AiPlannerViewModel AiPlanner { get; }
 
     public string NewTaskTitle
     {
@@ -182,6 +191,18 @@ public sealed class MainViewModel : INotifyPropertyChanged
         NewTaskDescription = string.Empty;
         NewTaskPriority = TaskPriority.Normal;
         NewTaskDueTime = null;
+    }
+
+    /// <summary>
+    /// Adds a TaskItem to the main task list and persists immediately. This is
+    /// used by other sub viewmodels (for example the AI planner) to inject
+    /// tasks programmatically while keeping persistence consistent.
+    /// </summary>
+    public void AddTaskItem(TaskItem task)
+    {
+        if (task is null) return;
+        Tasks.Insert(0, task);
+        SaveTasks();
     }
 
     private void OnPropertyChanged([CallerMemberName] string? propertyName = null)

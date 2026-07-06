@@ -2,11 +2,16 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:FloatTodo.App.ViewModels"
+             xmlns:conv="clr-namespace:FloatTodo.App.Converters"
              MinHeight="520"
              MinWidth="360">
     <UserControl.DataContext>
         <vm:MainViewModel/>
     </UserControl.DataContext>
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        <conv:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter"/>
+    </UserControl.Resources>
 
     <Border Background="#FFF8F8F8"
             CornerRadius="18"
@@ -39,12 +44,12 @@
                                    Foreground="#2F2F2F"/>
 
                         <StackPanel Orientation="Horizontal"
-                                Margin="0,8,0,0">
+                                    Margin="0,8,0,0">
                             <TextBox Width="140"
                                      Text="{Binding DailyRecords.NewRecordName, UpdateSourceTrigger=PropertyChanged}"
                                      Padding="6"/>
                             <TextBox Width="80"
-                                    Margin="8,0,0,0"
+                                     Margin="8,0,0,0"
                                      Text="{Binding DailyRecords.NewRecordIcon, UpdateSourceTrigger=PropertyChanged}"
                                      Padding="6"/>
                             <Button Content="新增"
@@ -75,34 +80,177 @@
 
                                             <StackPanel Grid.Column="1">
                                                 <TextBlock Text="{Binding Name}"
-                                                        FontWeight="SemiBold"/>
+                                                           FontWeight="SemiBold"/>
                                                 <StackPanel Orientation="Horizontal"
-                                                        Margin="0,4,0,0">
+                                                            Margin="0,4,0,0">
                                                     <TextBlock Text="次数: "
-                                                            FontSize="12"
-                                                            Foreground="#6F6F6F"/>
+                                                               FontSize="12"
+                                                               Foreground="#6F6F6F"/>
                                                     <TextBlock Text="{Binding TodayCount}"
-                                                            FontSize="12"
-                                                            Foreground="#2F2F2F"/>
+                                                               FontSize="12"
+                                                               Foreground="#2F2F2F"/>
                                                     <TextBlock Text="  上次: "
-                                                            Margin="8,0,0,0"
-                                                            FontSize="12"
-                                                            Foreground="#6F6F6F"/>
+                                                               Margin="8,0,0,0"
+                                                               FontSize="12"
+                                                               Foreground="#6F6F6F"/>
                                                     <TextBlock Text="{Binding LastRecordTime, StringFormat={}{0:yyyy/MM/dd HH:mm}, TargetNullValue=未记录}"
-                                                            FontSize="12"
-                                                            Foreground="#6F6F6F"/>
+                                                               FontSize="12"
+                                                               Foreground="#6F6F6F"/>
                                                 </StackPanel>
                                                 <TextBlock Text="{Binding TimeSinceLastRecord}"
-                                                        FontSize="12"
-                                                        Foreground="#8A8A8A"/>
+                                                           FontSize="12"
+                                                           Foreground="#8A8A8A"/>
                                             </StackPanel>
 
                                             <StackPanel Grid.Column="2"
-                                                    VerticalAlignment="Center">
+                                                        VerticalAlignment="Center">
                                                 <Button Content="+1"
                                                         Padding="6"
                                                         Command="{Binding DataContext.DailyRecords.IncrementCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                         CommandParameter="{Binding}"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <!-- API 设置 区域 -->
+                <Border Margin="0,0,0,12"
+                        Padding="12"
+                        Background="White"
+                        CornerRadius="12"
+                        BorderBrush="#F0F0F0"
+                        BorderThickness="1">
+                    <StackPanel>
+                        <TextBlock Text="API 设置"
+                                   FontSize="15"
+                                   FontWeight="SemiBold"
+                                   Foreground="#2F2F2F"/>
+                        <TextBlock Text="服务商: DeepSeek"
+                                   FontSize="12"
+                                   Foreground="#6F6F6F"
+                                   Margin="0,8,0,0"/>
+                        <StackPanel Orientation="Horizontal"
+                                Margin="0,8,0,0">
+                            <Grid Width="240">
+                                <TextBox Text="{Binding AiSettings.ApiKey, UpdateSourceTrigger=PropertyChanged}"
+                                         Padding="6"
+                                         Visibility="{Binding AiSettings.IsKeyVisible, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                                <PasswordBox Padding="6"
+                                             x:Name="ApiKeyBox"
+                                             Visibility="{Binding AiSettings.IsKeyVisible, Converter={StaticResource InverseBooleanToVisibilityConverter}}"
+                                             PasswordChanged="ApiKeyBox_PasswordChanged"/>
+                            </Grid>
+                            <Button Content="显示/隐藏"
+                                    Margin="8,0,0,0"
+                                    Padding="6"
+                                    Command="{Binding AiSettings.ToggleKeyVisibilityCommand}"/>
+                        </StackPanel>
+                        <TextBlock Text="{Binding AiSettings.StatusText}"
+                                   FontSize="12"
+                                   Foreground="#2F6B96"
+                                   Margin="0,6,0,0"/>
+                        <TextBlock Text="{Binding AiSettings.StatusText}"
+                                   FontSize="12"
+                                   Foreground="#6F6F6F"
+                                   Margin="0,4,0,0"/>
+                        <StackPanel Orientation="Horizontal"
+                                Margin="0,8,0,0">
+                            <Button Content="保存 Key"
+                                    Padding="8"
+                                    Command="{Binding AiSettings.SaveCommand}"/>
+                            <Button Content="测试连接"
+                                    Padding="8"
+                                    Margin="8,0,0,0"
+                                    Command="{Binding AiSettings.TestConnectionCommand}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- AI 项目拆解 模块 -->
+                <Border Margin="0,0,0,12"
+                        Padding="12"
+                        Background="White"
+                        CornerRadius="12"
+                        BorderBrush="#F0F0F0"
+                        BorderThickness="1">
+                    <StackPanel>
+                        <TextBlock Text="AI 拆解项目"
+                                   FontSize="15"
+                                   FontWeight="SemiBold"
+                                   Foreground="#2F2F2F"/>
+
+                        <TextBox Margin="0,8,0,0"
+                                 Height="80"
+                                 Text="{Binding AiPlanner.ProjectDescription, UpdateSourceTrigger=PropertyChanged}"
+                                 AcceptsReturn="True"
+                                 TextWrapping="Wrap"
+                                 Padding="6"/>
+
+                        <StackPanel Orientation="Horizontal"
+                                    Margin="0,8,0,0">
+                            <Button Content="拆解项目"
+                                    Padding="8"
+                                    Command="{Binding AiPlanner.GenerateCommand}"/>
+                            <Button Content="加入待办"
+                                    Padding="8"
+                                    Margin="8,0,0,0"
+                                    Command="{Binding AiPlanner.AddSelectedToTasksCommand}"/>
+                        </StackPanel>
+
+                        <ItemsControl ItemsSource="{Binding AiPlanner.Candidates}"
+                                      Margin="0,8,0,0">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Margin="0,0,0,8"
+                                            Padding="8"
+                                            Background="#FAFAFA"
+                                            CornerRadius="8">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <CheckBox IsChecked="{Binding IsSelected}"
+                                                      VerticalAlignment="Top"
+                                                      Margin="0,0,8,0"/>
+
+                                            <StackPanel Grid.Column="1">
+                                                <TextBlock Text="{Binding Title}"
+                                                           FontWeight="SemiBold"/>
+                                                <TextBlock Text="{Binding Description}"
+                                                           FontSize="12"
+                                                           Foreground="#6F6F6F"
+                                                           TextWrapping="Wrap"/>
+                                                <StackPanel Orientation="Horizontal"
+                                                            Margin="0,4,0,0">
+                                                    <TextBlock Text="优先级: "
+                                                               FontSize="12"
+                                                               Foreground="#6F6F6F"/>
+                                                    <TextBlock Text="{Binding Priority}"
+                                                               FontSize="12"/>
+                                                    <TextBlock Text="  预计: "
+                                                               Margin="8,0,0,0"
+                                                               FontSize="12"
+                                                               Foreground="#6F6F6F"/>
+                                                    <TextBlock Text="{Binding EstimatedMinutes}"
+                                                               FontSize="12"/>
+                                                    <TextBlock Text="  阶段: "
+                                                               Margin="8,0,0,0"
+                                                               FontSize="12"
+                                                               Foreground="#6F6F6F"/>
+                                                    <TextBlock Text="{Binding Phase}"
+                                                               FontSize="12"/>
+                                                    <TextBlock Text="  已加入"
+                                                               Margin="8,0,0,0"
+                                                               FontSize="12"
+                                                               Foreground="#0F6C3B"
+                                                               Visibility="{Binding IsAdded, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                                                </StackPanel>
                                             </StackPanel>
                                         </Grid>
                                     </Border>
