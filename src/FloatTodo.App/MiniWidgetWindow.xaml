@@ -23,9 +23,9 @@
                 <MenuItem Header="新增任务..."
                           Click="OpenQuickAddTaskWindow_Click"/>
                 <MenuItem Header="查看未完成任务"
-                          Click="OnPlaceholderMenuItemClick"/>
+                          Click="OpenUnfinishedTasks_Click"/>
                 <MenuItem Header="查看快截止任务"
-                          Click="OnPlaceholderMenuItemClick"/>
+                          Click="OpenDueSoonTasks_Click"/>
             </MenuItem>
             <MenuItem Header="AI 拆解">
                 <MenuItem Header="新建项目拆解..."
@@ -41,11 +41,11 @@
                 <MenuItem Header="起身活动 +1"
                           Click="StandUpMenuItem_Click"/>
                 <MenuItem Header="新增记录项..."
-                          Click="OnPlaceholderMenuItemClick"/>
+                          Click="OpenAddDailyRecord_Click"/>
             </MenuItem>
             <MenuItem Header="项目进度">
                 <MenuItem Header="查看项目进度"
-                          Click="OnPlaceholderMenuItemClick"/>
+                          Click="OpenProjectProgress_Click"/>
             </MenuItem>
             <MenuItem Header="设置">
                 <MenuItem Header="API Key 设置..."

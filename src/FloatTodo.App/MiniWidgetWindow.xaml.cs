@@ -79,6 +79,34 @@ public partial class MiniWidgetWindow : Window
         ToggleMainPanelRequested?.Invoke(this, EventArgs.Empty);
     }
 
+    private void OpenUnfinishedTasks_Click(object sender, RoutedEventArgs e)
+    {
+        var w = new QuickTaskListWindow(QuickTaskFilter.Unfinished);
+        w.Owner = this;
+        w.ShowDialog();
+    }
+
+    private void OpenDueSoonTasks_Click(object sender, RoutedEventArgs e)
+    {
+        var w = new QuickTaskListWindow(QuickTaskFilter.DueSoon);
+        w.Owner = this;
+        w.ShowDialog();
+    }
+
+    private void OpenProjectProgress_Click(object sender, RoutedEventArgs e)
+    {
+        var w = new QuickProjectProgressWindow();
+        w.Owner = this;
+        w.ShowDialog();
+    }
+
+    private void OpenAddDailyRecord_Click(object sender, RoutedEventArgs e)
+    {
+        var w = new QuickAddDailyRecordWindow();
+        w.Owner = this;
+        w.ShowDialog();
+    }
+
     private void DrinkWaterMenuItem_Click(object sender, RoutedEventArgs e)
     {
         AddDailyRecord("喝水", "记录今日喝水次数", "💧");

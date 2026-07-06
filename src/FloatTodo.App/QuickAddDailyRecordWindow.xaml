@@ -1,0 +1,37 @@
+<Window x:Class="FloatTodo.App.QuickAddDailyRecordWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="新增记录项"
+        Width="320"
+        Height="180"
+        WindowStartupLocation="CenterScreen"
+        Topmost="True"
+        ResizeMode="NoResize">
+    <Grid Margin="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <TextBlock Text="记录项名称"
+                FontWeight="Bold"/>
+        <TextBox x:Name="NameTextBox"
+                Grid.Row="1"
+                Margin="0,6,0,6"
+                Height="28"
+                VerticalContentAlignment="Center"/>
+        <StackPanel Grid.Row="2"
+                Orientation="Horizontal"
+                HorizontalAlignment="Right">
+            <Button Content="取消"
+                    Width="80"
+                    Height="30"
+                    Margin="0,0,8,0"
+                    Click="CancelButton_Click"/>
+            <Button Content="添加"
+                    Width="80"
+                    Height="30"
+                    Click="AddButton_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>
