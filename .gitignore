@@ -198,6 +198,15 @@ AutoTest.Net/
 
 # DocProject is a documentation generator add-in
 DocProject/buildhelp/
+
+# Local runtime and secret configuration
+data/
+*.log
+.env
+.env.*
+local-settings.json
+appsettings.Development.json
+secrets.json
 DocProject/Help/*.HxT
 DocProject/Help/*.HxC
 DocProject/Help/*.hhc
