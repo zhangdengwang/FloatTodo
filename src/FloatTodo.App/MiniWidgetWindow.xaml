@@ -5,17 +5,18 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
         Title="FloatTodo Mini Debug"
-        Width="100"
-        Height="100"
-        WindowStyle="None"
-        AllowsTransparency="True"
-        Background="Transparent"
+        Width="160"
+        Height="160"
+        WindowStyle="SingleBorderWindow"
+        AllowsTransparency="False"
+        Background="LightYellow"
         ResizeMode="NoResize"
         Topmost="True"
-        ShowInTaskbar="False"
+        ShowInTaskbar="True"
         WindowStartupLocation="CenterScreen"
         MouseMove="Window_MouseMove"
-        MouseLeftButtonUp="Window_MouseLeftButtonUp">
+        MouseLeftButtonUp="Window_MouseLeftButtonUp"
+        Closing="MiniWidgetWindow_Closing">
     <Window.ContextMenu>
         <ContextMenu>
             <MenuItem Header="显示/隐藏主面板"
@@ -26,27 +27,13 @@
         </ContextMenu>
     </Window.ContextMenu>
     <Grid>
-        <Border Background="#1AFFFFFF"
-                BorderBrush="#40FFFFFF"
-                BorderThickness="1"
-                CornerRadius="18">
-            <Grid>
-                <Image Source="Assets/Pet/pet_has_task.png"
-                       Width="86"
-                       Height="86"
-                       Stretch="Uniform"
-                       HorizontalAlignment="Center"
-                       VerticalAlignment="Center"
-                       ImageFailed="WidgetImage_ImageFailed"/>
-                <TextBlock x:Name="FallbackText"
-                           Text="FT"
-                           FontSize="24"
-                           FontWeight="Bold"
-                           Foreground="#FF333333"
-                           HorizontalAlignment="Center"
-                           VerticalAlignment="Center"
-                           Visibility="Collapsed"/>
-            </Grid>
-        </Border>
+        <TextBlock Text="FloatTodo MiniWidget 已启动"
+                   FontSize="18"
+                   FontWeight="Bold"
+                   Foreground="Black"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   TextWrapping="Wrap"
+                   TextAlignment="Center"/>
     </Grid>
 </Window>

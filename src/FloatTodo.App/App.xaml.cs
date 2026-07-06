@@ -8,12 +8,13 @@ namespace FloatTodo.App;
 public partial class App : Application
 {
     private MiniWidgetWindow? _miniWidgetWindow;
+    private MainWindow? _mainPanelWindow;
 
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
 
-        ShutdownMode = ShutdownMode.OnMainWindowClose;
+        ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
         _miniWidgetWindow = new MiniWidgetWindow();
         MainWindow = _miniWidgetWindow;

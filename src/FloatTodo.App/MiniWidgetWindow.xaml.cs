@@ -15,11 +15,6 @@ public partial class MiniWidgetWindow : Window
         InitializeComponent();
     }
 
-    private void WidgetImage_ImageFailed(object sender, ExceptionRoutedEventArgs e)
-    {
-        FallbackText.Visibility = Visibility.Visible;
-    }
-
     private void Window_MouseMove(object sender, MouseEventArgs e)
     {
         if (e.LeftButton == MouseButtonState.Pressed)
@@ -76,6 +71,11 @@ public partial class MiniWidgetWindow : Window
     }
 
     private void ExitMenuItem_Click(object sender, RoutedEventArgs e)
+    {
+        Application.Current.Shutdown();
+    }
+
+    private void MiniWidgetWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
     {
         Application.Current.Shutdown();
     }
