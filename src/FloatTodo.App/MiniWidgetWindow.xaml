@@ -27,13 +27,17 @@
         </ContextMenu>
     </Window.ContextMenu>
     <Grid>
-        <TextBlock Text="FloatTodo MiniWidget 已启动"
-                   FontSize="18"
+        <TextBlock Text="FT"
+                   FontSize="28"
                    FontWeight="Bold"
                    Foreground="Black"
                    HorizontalAlignment="Center"
-                   VerticalAlignment="Center"
-                   TextWrapping="Wrap"
-                   TextAlignment="Center"/>
+                   VerticalAlignment="Center"/>
+        <Image Source="pack://application:,,,/Assets/Pet/pet_has_task.png"
+               Width="100"
+               Height="100"
+               Stretch="Uniform"
+               HorizontalAlignment="Center"
+               VerticalAlignment="Center"/>
     </Grid>
 </Window>
