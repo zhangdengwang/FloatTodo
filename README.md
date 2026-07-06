@@ -24,3 +24,23 @@ FloatTodo 是一个基于 AI 项目拆解的桌面悬浮学习任务管理系统
 ## 项目目标
 
 帮助学生把复杂项目拆解成可执行的小任务，同时管理日常学习和生活记录。
+
+## 当前阶段
+
+已经完成第一阶段的项目骨架，包含：
+
+- WPF 悬浮窗应用项目，位于 [src/FloatTodo.App](src/FloatTodo.App)
+- 无边框、可拖动、置顶的主窗口
+- 360×520 的悬浮窗外壳
+- 今日任务、喝水记录、AI 拆解项目三个占位区域
+- 基础目录结构：Models、Services、ViewModels、Views、Assets
+
+## 运行方式
+
+1. 打开 VS Code，选择工作区根目录。
+2. 运行以下命令：
+   ```bash
+   cd src/FloatTodo.App
+   dotnet run
+   ```
+3. 或者在 VS Code 的 C# 扩展中选择解决方案并启动调试。
