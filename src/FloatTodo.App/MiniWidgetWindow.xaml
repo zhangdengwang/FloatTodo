@@ -19,13 +19,17 @@
         Closing="MiniWidgetWindow_Closing">
     <Window.ContextMenu>
         <ContextMenu Opened="ContextMenu_Opened">
-            <MenuItem Header="任务">
-                <MenuItem Header="新增任务..."
+            <MenuItem Header="照看任务">
+                <MenuItem Header="新增普通任务..."
                           Click="OpenQuickAddTaskWindow_Click"/>
+                <MenuItem Header="新建项目..."
+                          Click="OpenAddProject_Click"/>
                 <MenuItem Header="查看未完成任务"
                           Click="OpenUnfinishedTasks_Click"/>
                 <MenuItem Header="查看快截止任务"
                           Click="OpenDueSoonTasks_Click"/>
+                <MenuItem Header="查看项目列表"
+                          Click="OpenProjectList_Click"/>
             </MenuItem>
             <MenuItem Header="AI 拆解">
                 <MenuItem Header="新建项目拆解..."
@@ -47,10 +51,6 @@
                           Click="OpenDailyRecords_Click"/>
                 <MenuItem Header="新增记录项..."
                           Click="OpenAddDailyRecord_Click"/>
-            </MenuItem>
-            <MenuItem Header="项目进度">
-                <MenuItem Header="查看项目进度"
-                          Click="OpenProjectProgress_Click"/>
             </MenuItem>
             <MenuItem Header="设置">
                 <MenuItem Header="API Key 设置..."

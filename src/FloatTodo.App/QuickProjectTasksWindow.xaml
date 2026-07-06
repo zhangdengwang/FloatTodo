@@ -1,0 +1,46 @@
+<Window x:Class="FloatTodo.App.QuickProjectTasksWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Width="520"
+        Height="420"
+        WindowStartupLocation="CenterScreen"
+        Topmost="True"
+        ResizeMode="CanResize">
+    <Grid Margin="10">
+        <TextBlock x:Name="EmptyText"
+                   Text="当前项目没有小任务"
+                   Visibility="Collapsed"
+                   FontSize="14"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Top"
+                   Margin="0,8"/>
+
+        <ListBox x:Name="TasksList"
+                 ScrollViewer.VerticalScrollBarVisibility="Auto">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <Border Padding="10"
+                            Margin="4"
+                            Background="White"
+                            BorderBrush="#DDD"
+                            BorderThickness="1"
+                            CornerRadius="8">
+                        <StackPanel>
+                            <TextBlock Text="{Binding Title}"
+                                       FontWeight="SemiBold"/>
+                            <TextBlock Margin="0,4,0,0">
+                                <Run Text="优先级："/>
+                                <Run Text="{Binding Priority}"/>
+                                <Run Text="  |  状态："/>
+                                <Run Text="{Binding StatusDisplay}"/>
+                            </TextBlock>
+                            <TextBlock Text="{Binding DueTimeDisplay}"
+                                       Foreground="#666"
+                                       Margin="0,3,0,0"/>
+                        </StackPanel>
+                    </Border>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </Grid>
+</Window>

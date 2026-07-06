@@ -21,7 +21,6 @@ public sealed class AiPlannerViewModel : INotifyPropertyChanged
     private string _projectName = string.Empty;
     private string _projectDescription = string.Empty;
     private bool _isPlanning;
-    private string _currentBatchProjectId = string.Empty;
     private string _currentBatchProjectName = string.Empty;
 
     public AiPlannerViewModel(MainViewModel main, AiPlannerService service)
@@ -110,7 +109,6 @@ public sealed class AiPlannerViewModel : INotifyPropertyChanged
                     : (ProjectDescription.Length <= 20 ? ProjectDescription.Trim() : ProjectDescription[..20].Trim());
 
             _currentBatchProjectName = title;
-            _currentBatchProjectId = Guid.NewGuid().ToString();
 
             // Map AI tasks into CandidateTask instances.
             foreach (var t in plan.Tasks)
@@ -165,6 +163,27 @@ public sealed class AiPlannerViewModel : INotifyPropertyChanged
         var projectName = !string.IsNullOrWhiteSpace(ProjectName)
             ? ProjectName.Trim()
             : _currentBatchProjectName;
+        if (string.IsNullOrWhiteSpace(projectName))
+        {
+            projectName = ProjectDescription.Length <= 20
+                ? ProjectDescription.Trim()
+                : ProjectDescription[..20].Trim();
+        }
+
+        var project = new TaskItem
+        {
+            Title = projectName,
+            Description = ProjectDescription.Trim(),
+            Priority = TaskPriority.Important,
+            Status = FloatTodo.App.Models.TaskStatus.Todo,
+            CreatedAt = DateTime.Now,
+            DueTime = null,
+            IsProject = true,
+            ParentId = null,
+            ProjectName = projectName
+        };
+        _main.AddTaskItem(project);
+        var projectId = project.Id.ToString();
 
         foreach (var c in selected)
         {
@@ -176,10 +195,10 @@ public sealed class AiPlannerViewModel : INotifyPropertyChanged
                 Status = FloatTodo.App.Models.TaskStatus.Todo,
                 CreatedAt = DateTime.Now,
                 DueTime = null,
-                ProjectId = string.IsNullOrWhiteSpace(_currentBatchProjectId) ? Guid.NewGuid().ToString() : _currentBatchProjectId,
-                ProjectName = string.IsNullOrWhiteSpace(projectName)
-                    ? (ProjectDescription.Length <= 20 ? ProjectDescription.Trim() : ProjectDescription[..20].Trim())
-                    : projectName,
+                IsProject = false,
+                ParentId = projectId,
+                ProjectId = projectId,
+                ProjectName = projectName,
                 Phase = c.Phase,
                 EstimatedMinutes = c.EstimatedMinutes
             };

@@ -15,6 +15,7 @@ public partial class MiniWidgetWindow : Window
     public event EventHandler? ToggleMainPanelRequested;
     public event EventHandler? ExitRequested;
     private QuickDailyRecordsWindow? _quickDailyRecordsWindow;
+    private QuickProjectListWindow? _quickProjectListWindow;
     private readonly DispatcherTimer _reminderTimer;
 
     public MiniWidgetWindow()
@@ -131,7 +132,7 @@ public partial class MiniWidgetWindow : Window
 
         foreach (var task in tasks)
         {
-            if (task.Status == FloatTodo.App.Models.TaskStatus.Done)
+            if (task.IsProject || task.Status == FloatTodo.App.Models.TaskStatus.Done)
             {
                 continue;
             }
@@ -177,11 +178,32 @@ public partial class MiniWidgetWindow : Window
         window.Show();
     }
 
-    private void OpenProjectProgress_Click(object sender, RoutedEventArgs e)
+    private void OpenAddProject_Click(object sender, RoutedEventArgs e)
     {
-        var w = new QuickProjectProgressWindow();
-        w.Owner = this;
-        w.ShowDialog();
+        var window = new QuickAddProjectWindow
+        {
+            Owner = this
+        };
+        window.ShowDialog();
+        RefreshPetState();
+        _quickProjectListWindow?.RefreshProjects();
+    }
+
+    private void OpenProjectList_Click(object sender, RoutedEventArgs e)
+    {
+        if (_quickProjectListWindow is { IsVisible: true })
+        {
+            _quickProjectListWindow.RefreshProjects();
+            _quickProjectListWindow.Activate();
+            return;
+        }
+
+        _quickProjectListWindow = new QuickProjectListWindow
+        {
+            Owner = this
+        };
+        _quickProjectListWindow.Closed += (_, _) => _quickProjectListWindow = null;
+        _quickProjectListWindow.Show();
     }
 
     private void OpenAddDailyRecord_Click(object sender, RoutedEventArgs e)
@@ -365,6 +387,7 @@ public partial class MiniWidgetWindow : Window
         w.Owner = this;
         w.ShowDialog();
         RefreshPetState();
+        _quickProjectListWindow?.RefreshProjects();
     }
 
     private void ViewAiCandidates_Click(object sender, RoutedEventArgs e)
@@ -402,9 +425,15 @@ public partial class MiniWidgetWindow : Window
                 tasks = storage.Load();
             }
 
-            var unfinished = tasks.Count(t => t.Status != FloatTodo.App.Models.TaskStatus.Done);
+            var unfinished = tasks.Count(t =>
+                !t.IsProject &&
+                t.Status != FloatTodo.App.Models.TaskStatus.Done);
             var now = DateTime.Now;
-            var dueSoon = tasks.Count(t => t.Status != FloatTodo.App.Models.TaskStatus.Done && t.DueTime.HasValue && t.DueTime.Value <= now.AddHours(24));
+            var dueSoon = tasks.Count(t =>
+                !t.IsProject &&
+                t.Status != FloatTodo.App.Models.TaskStatus.Done &&
+                t.DueTime.HasValue &&
+                t.DueTime.Value <= now.AddHours(24));
 
             if (unfinished == 0)
             {

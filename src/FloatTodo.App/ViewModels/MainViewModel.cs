@@ -161,7 +161,9 @@ public sealed class MainViewModel : INotifyPropertyChanged
             Description = NewTaskDescription.Trim(),
             Priority = NewTaskPriority,
             DueTime = NewTaskDueTime,
-            Status = FloatTodo.App.Models.TaskStatus.Todo
+            Status = FloatTodo.App.Models.TaskStatus.Todo,
+            IsProject = false,
+            ParentId = null
         };
 
         Tasks.Insert(0, task);
@@ -259,7 +261,10 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     private void TaskOnPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(TaskItem.Status) || e.PropertyName == nameof(TaskItem.ProjectName))
+        if (e.PropertyName == nameof(TaskItem.Status) ||
+            e.PropertyName == nameof(TaskItem.IsProject) ||
+            e.PropertyName == nameof(TaskItem.ParentId) ||
+            e.PropertyName == nameof(TaskItem.Title))
         {
             RecalculateProjectProgress();
         }
@@ -269,14 +274,22 @@ public sealed class MainViewModel : INotifyPropertyChanged
     {
         try
         {
-            var groups = Tasks.Where(t => !string.IsNullOrWhiteSpace(t.ProjectName))
-                .GroupBy(t => new { t.ProjectId, t.ProjectName })
-                .Select(g => new
+            var groups = Tasks.Where(task => task.IsProject)
+                .Select(project =>
                 {
-                    g.Key.ProjectId,
-                    g.Key.ProjectName,
-                    Total = g.Count(),
-                    Completed = g.Count(t => t.Status == FloatTodo.App.Models.TaskStatus.Done)
+                    var projectId = project.Id.ToString();
+                    var children = Tasks.Where(task =>
+                        !task.IsProject &&
+                        string.Equals(task.ParentId, projectId, StringComparison.OrdinalIgnoreCase))
+                        .ToList();
+
+                    return new
+                    {
+                        ProjectId = projectId,
+                        ProjectName = project.Title,
+                        Total = children.Count,
+                        Completed = children.Count(task => task.Status == FloatTodo.App.Models.TaskStatus.Done)
+                    };
                 })
                 .ToList();
 

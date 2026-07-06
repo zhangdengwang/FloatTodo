@@ -53,8 +53,28 @@ public sealed class TaskStorageService
                 return new List<TaskItem>();
             }
 
+            var requiresIdUpgrade = ContainsTaskWithoutId(json);
             var items = JsonSerializer.Deserialize<List<TaskItem>>(json, _jsonOptions);
-            return items ?? new List<TaskItem>();
+            var result = items ?? new List<TaskItem>();
+            foreach (var task in result.Where(task => task.Id == Guid.Empty))
+            {
+                task.Id = Guid.NewGuid();
+                requiresIdUpgrade = true;
+            }
+
+            if (requiresIdUpgrade)
+            {
+                try
+                {
+                    Save(result);
+                }
+                catch
+                {
+                    // The loaded data remains usable even if the compatibility write-back fails.
+                }
+            }
+
+            return result;
         }
         catch (Exception)
         {
@@ -79,5 +99,31 @@ public sealed class TaskStorageService
         var list = tasks.Select(t => t).ToList();
         var json = JsonSerializer.Serialize(list, _jsonOptions);
         File.WriteAllText(_dataFilePath, json);
+    }
+
+    private static bool ContainsTaskWithoutId(string json)
+    {
+        using var document = JsonDocument.Parse(json);
+        if (document.RootElement.ValueKind != JsonValueKind.Array)
+        {
+            return false;
+        }
+
+        foreach (var taskElement in document.RootElement.EnumerateArray())
+        {
+            if (taskElement.ValueKind != JsonValueKind.Object)
+            {
+                continue;
+            }
+
+            var hasId = taskElement.EnumerateObject()
+                .Any(property => string.Equals(property.Name, nameof(TaskItem.Id), StringComparison.OrdinalIgnoreCase));
+            if (!hasId)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

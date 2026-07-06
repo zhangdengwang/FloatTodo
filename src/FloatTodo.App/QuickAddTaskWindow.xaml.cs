@@ -67,7 +67,9 @@ public partial class QuickAddTaskWindow : Window
             Title = title,
             Priority = priority,
             DueTime = dueTime,
-            Status = FloatTodo.App.Models.TaskStatus.Todo
+            Status = FloatTodo.App.Models.TaskStatus.Todo,
+            IsProject = false,
+            ParentId = null
         };
 
         if (Application.Current is App app)

@@ -15,8 +15,36 @@ public sealed class TaskItem : INotifyPropertyChanged
     private TaskStatus _status = TaskStatus.Todo;
     private DateTime? _dueTime;
     private DateTime? _completedAt;
+    private bool _isProject;
+    private string? _parentId;
 
-    public Guid Id { get; init; } = Guid.NewGuid();
+    public Guid Id { get; set; } = Guid.NewGuid();
+
+    public bool IsProject
+    {
+        get => _isProject;
+        set
+        {
+            if (_isProject != value)
+            {
+                _isProject = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public string? ParentId
+    {
+        get => _parentId;
+        set
+        {
+            if (_parentId != value)
+            {
+                _parentId = value;
+                OnPropertyChanged();
+            }
+        }
+    }
 
     public string Title
     {
