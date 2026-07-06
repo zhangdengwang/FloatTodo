@@ -1,6 +1,7 @@
 using System;
 using System.Windows;
 using System.Windows.Input;
+using FloatTodo.App.ViewModels;
 
 namespace FloatTodo.App;
 
@@ -76,6 +77,42 @@ public partial class MiniWidgetWindow : Window
     private void ToggleMainWindowMenuItem_Click(object sender, RoutedEventArgs e)
     {
         ToggleMainPanelRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void DrinkWaterMenuItem_Click(object sender, RoutedEventArgs e)
+    {
+        AddDailyRecord("喝水", "记录今日喝水次数", "💧");
+    }
+
+    private void RestEyesMenuItem_Click(object sender, RoutedEventArgs e)
+    {
+        AddDailyRecord("休息眼睛", "记录今日休息眼睛次数", "👀");
+    }
+
+    private void StandUpMenuItem_Click(object sender, RoutedEventArgs e)
+    {
+        AddDailyRecord("起身活动", "记录今日起身活动次数", "🦶");
+    }
+
+    private void AddDailyRecord(string name, string description, string iconText)
+    {
+        if (Application.Current is not App app)
+        {
+            MessageBox.Show(this, $"{name} +1 已记录", "FloatTodo", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var mainViewModel = app.GetMainViewModel();
+        if (mainViewModel != null)
+        {
+            mainViewModel.DailyRecords.IncrementRecordByName(name, description, iconText);
+            MessageBox.Show(this, $"{name} +1 已记录", "FloatTodo", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var temp = new DailyRecordsViewModel();
+        temp.IncrementRecordByName(name, description, iconText);
+        MessageBox.Show(this, $"{name} +1 已记录", "FloatTodo", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
     private void OpenQuickAddTaskWindow_Click(object sender, RoutedEventArgs e)

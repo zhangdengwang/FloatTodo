@@ -35,11 +35,11 @@
             </MenuItem>
             <MenuItem Header="日常记录">
                 <MenuItem Header="喝水 +1"
-                          Click="OnPlaceholderMenuItemClick"/>
+                          Click="DrinkWaterMenuItem_Click"/>
                 <MenuItem Header="休息眼睛 +1"
-                          Click="OnPlaceholderMenuItemClick"/>
+                          Click="RestEyesMenuItem_Click"/>
                 <MenuItem Header="起身活动 +1"
-                          Click="OnPlaceholderMenuItemClick"/>
+                          Click="StandUpMenuItem_Click"/>
                 <MenuItem Header="新增记录项..."
                           Click="OnPlaceholderMenuItemClick"/>
             </MenuItem>

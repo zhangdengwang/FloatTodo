@@ -80,6 +80,43 @@ public sealed class DailyRecordsViewModel : INotifyPropertyChanged
     public ICommand AddRecordCommand { get; }
     public ICommand IncrementCommand { get; }
 
+    public void IncrementRecordByName(string name, string description, string iconText)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return;
+        }
+
+        var now = DateTime.Now;
+        var item = Records.FirstOrDefault(r => r.Name == name);
+        if (item == null)
+        {
+            item = new DailyRecordItem
+            {
+                Name = name,
+                Description = description,
+                IconText = iconText,
+                TodayCount = 0,
+                LastRecordTime = null,
+                UpdatedAt = null
+            };
+            Records.Add(item);
+        }
+
+        if (item.LastRecordTime is null || item.LastRecordTime.Value.Date != DateTime.Today)
+        {
+            item.TodayCount = 1;
+        }
+        else
+        {
+            item.TodayCount += 1;
+        }
+
+        item.LastRecordTime = now;
+        item.UpdatedAt = now;
+        Save();
+    }
+
     public event PropertyChangedEventHandler? PropertyChanged;
 
     private void AddRecord()
