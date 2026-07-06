@@ -6,73 +6,104 @@ namespace FloatTodo.App;
 
 public partial class MiniWidgetWindow : Window
 {
-    private Point _dragStart;
     private bool _isDragging;
-    private MainWindow? _mainWindow;
+    private bool _isLeftMouseDown;
+    private Point _mouseDownPosition;
+
+    public event EventHandler? ToggleMainPanelRequested;
+    public event EventHandler? ExitRequested;
 
     public MiniWidgetWindow()
     {
         InitializeComponent();
     }
 
+    protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
+    {
+        base.OnMouseLeftButtonDown(e);
+
+        _isLeftMouseDown = true;
+        _mouseDownPosition = e.GetPosition(this);
+        CaptureMouse();
+    }
+
     private void Window_MouseMove(object sender, MouseEventArgs e)
     {
-        if (e.LeftButton == MouseButtonState.Pressed)
+        if (!_isLeftMouseDown || _isDragging || e.LeftButton != MouseButtonState.Pressed)
         {
-            if (!_isDragging)
+            return;
+        }
+
+        var currentPosition = e.GetPosition(this);
+        var deltaX = Math.Abs(currentPosition.X - _mouseDownPosition.X);
+        var deltaY = Math.Abs(currentPosition.Y - _mouseDownPosition.Y);
+
+        if (deltaX > 5 || deltaY > 5)
+        {
+            try
             {
                 _isDragging = true;
-                _dragStart = e.GetPosition(this);
+                DragMove();
+                ClampToScreen();
             }
-
-            var screenPoint = PointToScreen(e.GetPosition(this));
-            Left = screenPoint.X - _dragStart.X;
-            Top = screenPoint.Y - _dragStart.Y;
-        }
-        else
-        {
-            _isDragging = false;
+            catch
+            {
+                // 忽略拖动异常，不关闭窗口
+            }
         }
     }
 
     private void Window_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
     {
-        if (!_isDragging)
+        if (_isLeftMouseDown && !_isDragging)
         {
-            ToggleMainPanel();
+            ToggleMainPanelRequested?.Invoke(this, EventArgs.Empty);
         }
 
+        _isLeftMouseDown = false;
         _isDragging = false;
+        ReleaseMouseCapture();
     }
 
-    private void ToggleMainPanel()
+    private void ClampToScreen()
     {
-        if (_mainWindow is null)
+        var workArea = SystemParameters.WorkArea;
+
+        var newLeft = Left;
+        var newTop = Top;
+
+        if (newLeft < workArea.Left)
         {
-            _mainWindow = new MainWindow();
-            _mainWindow.Closed += (_, _) => _mainWindow = null;
-            _mainWindow.Show();
-            return;
+            newLeft = workArea.Left;
         }
 
-        if (_mainWindow.IsVisible)
+        if (newTop < workArea.Top)
         {
-            _mainWindow.Hide();
+            newTop = workArea.Top;
         }
-        else
+
+        if (newLeft + Width > workArea.Right)
         {
-            _mainWindow.Show();
+            newLeft = workArea.Right - Width;
         }
+
+        if (newTop + Height > workArea.Bottom)
+        {
+            newTop = workArea.Bottom - Height;
+        }
+
+        Left = newLeft;
+        Top = newTop;
     }
 
     private void ToggleMainWindowMenuItem_Click(object sender, RoutedEventArgs e)
     {
-        ToggleMainPanel();
+        ToggleMainPanelRequested?.Invoke(this, EventArgs.Empty);
     }
 
     private void ExitMenuItem_Click(object sender, RoutedEventArgs e)
     {
-        Application.Current.Shutdown();
+        ExitRequested?.Invoke(this, EventArgs.Empty);
     }
 
     private void MiniWidgetWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
