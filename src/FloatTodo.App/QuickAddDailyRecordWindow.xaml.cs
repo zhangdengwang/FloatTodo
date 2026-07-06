@@ -1,4 +1,3 @@
-using System;
 using System.Windows;
 using FloatTodo.App.ViewModels;
 
@@ -25,57 +24,30 @@ public partial class QuickAddDailyRecordWindow : Window
             return;
         }
 
-        // Try to use existing main view model if available
+        DailyRecordsViewModel recordsViewModel;
         if (Application.Current is App app)
         {
             var mainVm = app.GetMainViewModel();
             if (mainVm != null)
             {
-                var exists = mainVm.DailyRecords.Records.Any(r => r.Name == name);
-                if (exists)
-                {
-                    MessageBox.Show(this, "记录项已存在", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
-                    return;
-                }
-
-                mainVm.DailyRecords.AddRecordCommand.Execute(null); // Not ideal, but AddRecord uses NewRecordName; instead call AddRecordByName if available
-                // We'll call AddRecordByName via reflection to avoid changing MainViewModel further
-                try
-                {
-                    var method = mainVm.DailyRecords.GetType().GetMethod("AddRecordByName");
-                    if (method != null)
-                    {
-                        method.Invoke(mainVm.DailyRecords, new object[] { name, string.Empty, string.Empty });
-                        Close();
-                        return;
-                    }
-                }
-                catch
-                {
-                    // fall through
-                }
+                recordsViewModel = mainVm.DailyRecords;
+            }
+            else
+            {
+                recordsViewModel = new DailyRecordsViewModel();
             }
         }
+        else
+        {
+            recordsViewModel = new DailyRecordsViewModel();
+        }
 
-        // Fallback: use a temporary viewmodel to persist
-        var temp = new DailyRecordsViewModel();
-        var existing = temp.Records.Any(r => r.Name == name);
-        if (existing)
+        if (!recordsViewModel.AddRecordByName(name, string.Empty, string.Empty))
         {
             MessageBox.Show(this, "记录项已存在", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
-        // invoke AddRecordByName via reflection if available
-        var m = temp.GetType().GetMethod("AddRecordByName");
-        if (m != null)
-        {
-            m.Invoke(temp, new object[] { name, string.Empty, string.Empty });
-            Close();
-            return;
-        }
-
-        // Last resort: show error
-        MessageBox.Show(this, "无法新增记录项", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+        Close();
     }
 }

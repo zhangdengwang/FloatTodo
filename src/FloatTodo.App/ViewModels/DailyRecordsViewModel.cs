@@ -80,6 +80,33 @@ public sealed class DailyRecordsViewModel : INotifyPropertyChanged
     public ICommand AddRecordCommand { get; }
     public ICommand IncrementCommand { get; }
 
+    public bool AddRecordByName(string name, string description, string iconText)
+    {
+        var trimmedName = name?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(trimmedName))
+        {
+            return false;
+        }
+
+        if (Records.Any(r => string.Equals(r.Name, trimmedName, StringComparison.Ordinal)))
+        {
+            return false;
+        }
+
+        Records.Add(new DailyRecordItem
+        {
+            Name = trimmedName,
+            Description = description?.Trim() ?? string.Empty,
+            IconText = iconText?.Trim() ?? string.Empty,
+            TodayCount = 0,
+            LastRecordTime = null,
+            UpdatedAt = DateTime.Now
+        });
+
+        Save();
+        return true;
+    }
+
     public void IncrementRecordByName(string name, string description, string iconText)
     {
         if (string.IsNullOrWhiteSpace(name))
@@ -121,18 +148,10 @@ public sealed class DailyRecordsViewModel : INotifyPropertyChanged
 
     private void AddRecord()
     {
-        var item = new DailyRecordItem
+        if (AddRecordByName(NewRecordName, NewRecordDescription, NewRecordIcon))
         {
-            Name = NewRecordName.Trim(),
-            Description = NewRecordDescription.Trim(),
-            IconText = string.IsNullOrEmpty(NewRecordIcon) ? "" : NewRecordIcon.Trim(),
-            TodayCount = 0,
-            LastRecordTime = null,
-            UpdatedAt = DateTime.Now
-        };
-        Records.Add(item);
-        ClearNewForm();
-        Save();
+            ClearNewForm();
+        }
     }
 
     private void ClearNewForm()

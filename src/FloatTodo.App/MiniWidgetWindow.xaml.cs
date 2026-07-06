@@ -1,7 +1,11 @@
 using System;
 using System.Windows;
 using System.Windows.Input;
+using System.Linq;
+using System.Windows.Media.Imaging;
 using FloatTodo.App.ViewModels;
+using FloatTodo.App.Services;
+using FloatTodo.App.Models;
 
 namespace FloatTodo.App;
 
@@ -13,6 +17,7 @@ public partial class MiniWidgetWindow : Window
     public MiniWidgetWindow()
     {
         InitializeComponent();
+        Loaded += (_, _) => RefreshPetState();
     }
 
     protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
@@ -107,6 +112,13 @@ public partial class MiniWidgetWindow : Window
         w.ShowDialog();
     }
 
+    private void OpenDailyRecords_Click(object sender, RoutedEventArgs e)
+    {
+        var w = new QuickDailyRecordsWindow();
+        w.Owner = this;
+        w.ShowDialog();
+    }
+
     private void DrinkWaterMenuItem_Click(object sender, RoutedEventArgs e)
     {
         AddDailyRecord("喝水", "记录今日喝水次数", "💧");
@@ -148,6 +160,7 @@ public partial class MiniWidgetWindow : Window
         var quickAdd = new QuickAddTaskWindow();
         quickAdd.Owner = this;
         quickAdd.ShowDialog();
+        RefreshPetState();
     }
 
     private void OnPlaceholderMenuItemClick(object sender, RoutedEventArgs e)
@@ -159,6 +172,19 @@ public partial class MiniWidgetWindow : Window
             MessageBoxImage.Information);
     }
 
+    private void OpenAiBreakdown_Click(object sender, RoutedEventArgs e)
+    {
+        var w = new QuickAiBreakdownWindow();
+        w.Owner = this;
+        w.ShowDialog();
+        RefreshPetState();
+    }
+
+    private void ViewAiCandidates_Click(object sender, RoutedEventArgs e)
+    {
+        MessageBox.Show(this, "请先使用新建项目拆解生成候选任务。", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+    }
+
     private void ExitMenuItem_Click(object sender, RoutedEventArgs e)
     {
         ExitRequested?.Invoke(this, EventArgs.Empty);
@@ -167,5 +193,52 @@ public partial class MiniWidgetWindow : Window
     private void MiniWidgetWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
     {
         Application.Current.Shutdown();
+    }
+
+    public void RefreshPetState()
+    {
+        try
+        {
+            MainViewModel? mainVm = null;
+            if (Application.Current is App app)
+            {
+                mainVm = app.GetMainViewModel();
+            }
+
+            var tasks = Enumerable.Empty<TaskItem>();
+            if (mainVm != null)
+                tasks = mainVm.Tasks.ToList();
+            else
+            {
+                var storage = new TaskStorageService();
+                tasks = storage.Load();
+            }
+
+            var unfinished = tasks.Count(t => t.Status != FloatTodo.App.Models.TaskStatus.Done);
+            var now = DateTime.Now;
+            var dueSoon = tasks.Count(t => t.Status != FloatTodo.App.Models.TaskStatus.Done && t.DueTime.HasValue && t.DueTime.Value <= now.AddHours(24));
+
+            if (unfinished == 0)
+            {
+                PetImage.Source = new BitmapImage(new Uri("pack://application:,,,/Assets/Pet/pet_no_task.png"));
+                BadgeRoot.Visibility = Visibility.Collapsed;
+            }
+            else if (dueSoon > 0)
+            {
+                PetImage.Source = new BitmapImage(new Uri("pack://application:,,,/Assets/Pet/pet_urgent.png"));
+                BadgeRoot.Visibility = Visibility.Visible;
+                BadgeText.Text = dueSoon >= 100 ? "99+" : dueSoon.ToString();
+            }
+            else
+            {
+                PetImage.Source = new BitmapImage(new Uri("pack://application:,,,/Assets/Pet/pet_has_task.png"));
+                BadgeRoot.Visibility = unfinished > 0 ? Visibility.Visible : Visibility.Collapsed;
+                BadgeText.Text = unfinished >= 100 ? "99+" : unfinished.ToString();
+            }
+        }
+        catch
+        {
+            // keep pet stable
+        }
     }
 }

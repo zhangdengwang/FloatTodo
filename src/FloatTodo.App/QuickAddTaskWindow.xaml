@@ -3,8 +3,9 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="新增任务"
         Width="320"
-        Height="260"
-        ResizeMode="NoResize"
+        Height="340"
+        MinHeight="320"
+        ResizeMode="CanResize"
         WindowStartupLocation="CenterScreen"
         Topmost="True"
         WindowStyle="SingleBorderWindow"
@@ -15,11 +16,13 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
+
         <TextBlock Text="任务标题"
-                FontWeight="Bold"/>
+                   FontWeight="Bold"/>
         <TextBox x:Name="TitleTextBox"
                  Grid.Row="1"
                  Margin="0,6,0,12"
@@ -27,8 +30,8 @@
                  VerticalContentAlignment="Center"/>
 
         <TextBlock Text="优先级"
-                FontWeight="Bold"
-                Grid.Row="2"/>
+                   FontWeight="Bold"
+                   Grid.Row="2"/>
         <ComboBox x:Name="PriorityComboBox"
                   Grid.Row="3"
                   Margin="0,6,0,12"
@@ -39,20 +42,19 @@
             <ComboBoxItem Content="紧急"/>
         </ComboBox>
 
-        <StackPanel Grid.Row="4"
-                Orientation="Vertical">
-            <TextBlock Text="截止时间 (yyyy-MM-dd HH:mm)"
-                    FontWeight="Bold"/>
-            <TextBox x:Name="DueTimeTextBox"
-                     Margin="0,6,0,0"
-                     Height="28"
-                     VerticalContentAlignment="Center"/>
-        </StackPanel>
+        <TextBlock Grid.Row="4"
+                   Text="截止时间 (yyyy-MM-dd HH:mm)"
+                   FontWeight="Bold"/>
+        <TextBox x:Name="DueTimeTextBox"
+                 Grid.Row="5"
+                 Margin="0,6,0,12"
+                 Height="28"
+                 VerticalContentAlignment="Center"/>
 
-        <StackPanel Grid.Row="5"
-                Orientation="Horizontal"
-                HorizontalAlignment="Right"
-                Margin="0,16,0,0">
+        <StackPanel Grid.Row="6"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Margin="0,8,0,0">
             <Button Content="取消"
                     Width="80"
                     Height="30"

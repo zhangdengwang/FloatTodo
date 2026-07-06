@@ -18,7 +18,15 @@ public partial class QuickTaskListWindow : Window
     public QuickTaskListWindow(QuickTaskFilter filter)
     {
         InitializeComponent();
-        LoadTasks(filter);
+        try
+        {
+            LoadTasks(filter);
+        }
+        catch (Exception ex)
+        {
+            LogStartupError(ex);
+            MessageBox.Show(this, "加载任务失败，请检查日志。", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
     }
 
     private void LoadTasks(QuickTaskFilter filter)
@@ -39,11 +47,30 @@ public partial class QuickTaskListWindow : Window
         {
             var now = DateTime.Now;
             var limit = now.AddHours(24);
-            var q = items.Where(t => t.Status != FloatTodo.App.Models.TaskStatus.Done && t.DueTime.HasValue && t.DueTime.Value <= limit)
-                         .Select(t => new { t.Title, Priority = t.Priority.ToString(), DueTime = t.DueTime.Value, DueTimeDisplay = t.DueTime.Value.ToString("yyyy-MM-dd HH:mm"), IsOverdue = t.DueTime.Value < now })
-                         .Select(t => new { Title = t.Title + (t.IsOverdue ? "  (已逾期)" : "  (即将截止)"), Priority = t.Priority, DueTimeDisplay = t.DueTimeDisplay })
-                         .ToList();
-            viewItems = q;
+            var dueSoonItems = new List<object>();
+
+            foreach (var task in items)
+            {
+                if (task.Status == FloatTodo.App.Models.TaskStatus.Done || !task.DueTime.HasValue)
+                {
+                    continue;
+                }
+
+                var dueTime = task.DueTime.Value;
+                if (dueTime > limit)
+                {
+                    continue;
+                }
+
+                dueSoonItems.Add(new
+                {
+                    Title = task.Title + (dueTime < now ? "  (已逾期)" : "  (即将截止)"),
+                    Priority = task.Priority.ToString(),
+                    DueTimeDisplay = dueTime.ToString("yyyy-MM-dd HH:mm")
+                });
+            }
+
+            viewItems = dueSoonItems;
         }
 
         var list = viewItems.ToList();
@@ -57,6 +84,20 @@ public partial class QuickTaskListWindow : Window
             EmptyText.Visibility = Visibility.Collapsed;
             TasksList.Visibility = Visibility.Visible;
             TasksList.ItemsSource = list;
+        }
+    }
+
+    private static void LogStartupError(Exception exception)
+    {
+        try
+        {
+            var path = System.IO.Path.Combine(AppContext.BaseDirectory, "startup.log");
+            var message = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] QuickTaskListWindow error: {exception}\r\n";
+            System.IO.File.AppendAllText(path, message);
+        }
+        catch
+        {
+            // ignore logging failures
         }
     }
 }
