@@ -6,10 +6,6 @@ namespace FloatTodo.App;
 
 public partial class MiniWidgetWindow : Window
 {
-    private bool _isDragging;
-    private bool _isLeftMouseDown;
-    private Point _mouseDownPosition;
-
     public event EventHandler? ToggleMainPanelRequested;
     public event EventHandler? ExitRequested;
 
@@ -80,6 +76,13 @@ public partial class MiniWidgetWindow : Window
     private void ToggleMainWindowMenuItem_Click(object sender, RoutedEventArgs e)
     {
         ToggleMainPanelRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void OpenQuickAddTaskWindow_Click(object sender, RoutedEventArgs e)
+    {
+        var quickAdd = new QuickAddTaskWindow();
+        quickAdd.Owner = this;
+        quickAdd.ShowDialog();
     }
 
     private void OnPlaceholderMenuItemClick(object sender, RoutedEventArgs e)

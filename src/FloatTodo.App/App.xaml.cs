@@ -1,4 +1,5 @@
 ﻿using System.Windows;
+using FloatTodo.App.ViewModels;
 
 namespace FloatTodo.App;
 
@@ -40,6 +41,11 @@ public partial class App : Application
             _mainPanelWindow.Show();
             _mainPanelWindow.Activate();
         }
+    }
+
+    public MainViewModel? GetMainViewModel()
+    {
+        return _mainPanelWindow?.DataContext as MainViewModel;
     }
 }
 
