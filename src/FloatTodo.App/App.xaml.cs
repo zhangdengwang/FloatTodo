@@ -7,12 +7,17 @@ namespace FloatTodo.App;
 /// </summary>
 public partial class App : Application
 {
+    private MiniWidgetWindow? _miniWidgetWindow;
+
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
 
-        var window = new MainWindow();
-        window.Show();
+        ShutdownMode = ShutdownMode.OnMainWindowClose;
+
+        _miniWidgetWindow = new MiniWidgetWindow();
+        MainWindow = _miniWidgetWindow;
+        _miniWidgetWindow.Show();
     }
 }
 

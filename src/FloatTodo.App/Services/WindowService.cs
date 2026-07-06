@@ -18,6 +18,5 @@ public static class WindowService
 
         // Keep the shell visually simple for the first iteration.
         window.Background = System.Windows.Media.Brushes.Transparent;
-        window.AllowsTransparency = true;
     }
 }
