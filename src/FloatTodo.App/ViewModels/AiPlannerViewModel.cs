@@ -11,7 +11,7 @@ using FloatTodo.App.Services;
 namespace FloatTodo.App.ViewModels;
 
 /// <summary>
-/// ViewModel for the AI planner mock UI. Produces candidate tasks and allows
+/// ViewModel for the AI planner UI. Produces candidate tasks and allows
 /// adding selected candidates into the main todo list.
 /// </summary>
 public sealed class AiPlannerViewModel : INotifyPropertyChanged
@@ -29,7 +29,8 @@ public sealed class AiPlannerViewModel : INotifyPropertyChanged
         Candidates = new ObservableCollection<CandidateTask>();
 
         GenerateCommand = new RelayCommand(_ => { _ = GenerateAsync(); }, _ => !IsPlanning);
-        AddSelectedToTasksCommand = new RelayCommand(_ => AddSelectedToTasks(), _ => Candidates.Any(c => c.IsSelected && !c.IsAdded) && !IsPlanning);
+        // The Add-to-tasks button should always be clickable; command handles empty/none-selected cases.
+        AddSelectedToTasksCommand = new RelayCommand(_ => AddSelectedToTasks(), _ => true);
 
         Candidates.CollectionChanged += (s, e) => AttachCandidateHandlers();
     }
@@ -122,10 +123,16 @@ public sealed class AiPlannerViewModel : INotifyPropertyChanged
 
     private void AddSelectedToTasks()
     {
+        if (!Candidates.Any())
+        {
+            MessageBox.Show("请先拆解项目。", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
         var selected = Candidates.Where(c => c.IsSelected && !c.IsAdded).ToList();
         if (selected.Count == 0)
         {
-            MessageBox.Show("请先选择至少一个候选任务再加入待办。", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show("请先选择要加入的任务。", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
@@ -134,9 +141,11 @@ public sealed class AiPlannerViewModel : INotifyPropertyChanged
             var task = new TaskItem
             {
                 Title = c.Title,
-                Description = $"{c.Description}\n阶段: {c.Phase}\n预计分钟: {c.EstimatedMinutes}",
+                Description = c.Description,
                 Priority = c.Priority,
-                Status = FloatTodo.App.Models.TaskStatus.Todo
+                Status = FloatTodo.App.Models.TaskStatus.Todo,
+                CreatedAt = DateTime.Now,
+                DueTime = null
             };
 
             _main.AddTaskItem(task);
@@ -144,7 +153,8 @@ public sealed class AiPlannerViewModel : INotifyPropertyChanged
             c.IsSelected = false;
         }
 
-        // After adding, update the button state.
+        var count = selected.Count;
+        MessageBox.Show($"已加入 {count} 个任务到待办。", "成功", MessageBoxButton.OK, MessageBoxImage.Information);
         (AddSelectedToTasksCommand as RelayCommand)?.RaiseCanExecuteChanged();
     }
 

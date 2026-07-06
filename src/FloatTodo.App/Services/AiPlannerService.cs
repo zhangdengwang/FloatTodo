@@ -66,13 +66,26 @@ public sealed class AiPlannerService
         var body = JsonSerializer.Serialize(payload);
         using var content = new StringContent(body, Encoding.UTF8, "application/json");
 
-        using var resp = await http.PostAsync(settings.BaseUrl, content).ConfigureAwait(false);
-        var respText = await resp.Content.ReadAsStringAsync().ConfigureAwait(false);
+        HttpResponseMessage resp;
+        string respText;
+        try
+        {
+            resp = await http.PostAsync(settings.BaseUrl, content).ConfigureAwait(false);
+            respText = await resp.Content.ReadAsStringAsync().ConfigureAwait(false);
+        }
+        catch (HttpRequestException httpEx)
+        {
+            throw new Exception($"AI 拆解失败，网络错误: {httpEx.Message}");
+        }
+        catch (TaskCanceledException tcEx)
+        {
+            throw new Exception($"AI 拆解失败，网络超时: {tcEx.Message}");
+        }
 
         if (!resp.IsSuccessStatusCode)
         {
-            var summary = respText.Length > 200 ? respText[..200] + "..." : respText;
-            throw new Exception($"AI 拆解失败，请检查网络或 API Key。HTTP {resp.StatusCode}: {summary}");
+            var summary = string.IsNullOrWhiteSpace(respText) ? "(无响应内容)" : (respText.Length > 200 ? respText[..200] + "..." : respText);
+            throw new Exception($"AI 拆解失败。HTTP {resp.StatusCode}: {summary}");
         }
 
         try
@@ -87,9 +100,13 @@ public sealed class AiPlannerService
             if (string.IsNullOrWhiteSpace(message))
                 throw new Exception("AI 返回内容为空。");
 
+            message = CleanAiResponseContent(message);
+            if (string.IsNullOrWhiteSpace(message))
+                throw new Exception("AI 返回内容为空。请检查模型输出。\n");
+
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
             var plan = JsonSerializer.Deserialize<AiPlanResult>(message, options);
-            if (plan is null)
+            if (plan is null || plan.Tasks is null)
                 throw new Exception("AI 返回格式异常，请重新尝试。");
 
             return plan;
@@ -98,6 +115,41 @@ public sealed class AiPlannerService
         {
             throw new Exception("AI 返回格式异常，请重新尝试。");
         }
+    }
+
+    private static string CleanAiResponseContent(string content)
+    {
+        content = content.Trim();
+        if (string.IsNullOrEmpty(content))
+            return string.Empty;
+
+        // Remove markdown code fences and any leading language hint.
+        if (content.StartsWith("```"))
+        {
+            var endFence = content.LastIndexOf("```");
+            if (endFence > 3)
+            {
+                content = content[3..endFence].Trim();
+            }
+        }
+
+        if (content.StartsWith("json", StringComparison.OrdinalIgnoreCase))
+        {
+            var idx = content.IndexOf('\n');
+            if (idx >= 0)
+            {
+                content = content[(idx + 1)..].Trim();
+            }
+        }
+
+        var firstBrace = content.IndexOf('{');
+        var lastBrace = content.LastIndexOf('}');
+        if (firstBrace >= 0 && lastBrace > firstBrace)
+        {
+            content = content[firstBrace..(lastBrace + 1)].Trim();
+        }
+
+        return content;
     }
 
     private static string? GetApiKey(ApiSettings settings)

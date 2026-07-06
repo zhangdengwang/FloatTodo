@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 namespace FloatTodo.App.Models;
 
 /// <summary>
-/// Represents a candidate task produced by the AI planner (mock).
+/// Represents a candidate task produced by the AI planner.
 /// </summary>
 public sealed class CandidateTask : INotifyPropertyChanged
 {
