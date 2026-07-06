@@ -8,37 +8,41 @@
         Topmost="True"
         ResizeMode="NoResize">
     <Grid Margin="10">
-        <StackPanel>
-            <TextBlock x:Name="EmptyText"
-                    Text="当前没有未完成任务。"
-                    Visibility="Collapsed"
-                    FontSize="14"
-                    HorizontalAlignment="Center"
-                    Margin="0,6"/>
-            <ListBox x:Name="TasksList"
-                    Visibility="Visible">
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <Border Padding="8"
-                                Margin="4"
-                                Background="#FFF"
-                                CornerRadius="6"
-                                BorderBrush="#EEE"
-                                BorderThickness="1">
-                            <StackPanel>
-                                <TextBlock Text="{Binding Title}"
-                                        FontWeight="SemiBold"/>
-                                <TextBlock>
-                                    <Run Text="优先级: "/>
-                                    <Run Text="{Binding Priority}"/>
-                                    <Run Text="  |  截止: "/>
-                                    <Run Text="{Binding DueTimeDisplay}"/>
-                                </TextBlock>
-                            </StackPanel>
-                        </Border>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
-        </StackPanel>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <TextBlock x:Name="EmptyText"
+                   Text="当前没有未完成任务。"
+                   Visibility="Collapsed"
+                   FontSize="14"
+                   HorizontalAlignment="Center"
+                   Margin="0,6"/>
+        <ListBox x:Name="TasksList"
+                 Grid.Row="1"
+                 Visibility="Visible"
+                 ScrollViewer.VerticalScrollBarVisibility="Auto">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <Border Padding="8"
+                            Margin="4"
+                            Background="#FFF"
+                            CornerRadius="6"
+                            BorderBrush="#EEE"
+                            BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock Text="{Binding Title}"
+                                       FontWeight="SemiBold"/>
+                            <TextBlock>
+                                <Run Text="优先级: "/>
+                                <Run Text="{Binding Priority}"/>
+                                <Run Text="  |  截止: "/>
+                                <Run Text="{Binding DueTimeDisplay}"/>
+                            </TextBlock>
+                        </StackPanel>
+                    </Border>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
     </Grid>
 </Window>

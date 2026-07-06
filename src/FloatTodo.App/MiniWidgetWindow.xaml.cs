@@ -87,16 +87,81 @@ public partial class MiniWidgetWindow : Window
 
     private void OpenUnfinishedTasks_Click(object sender, RoutedEventArgs e)
     {
-        var w = new QuickTaskListWindow(QuickTaskFilter.Unfinished);
-        w.Owner = this;
-        w.ShowDialog();
+        try
+        {
+            OpenTaskList(QuickTaskFilter.Unfinished);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(this, $"打开任务列表失败：{ex.Message}", "FloatTodo", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
     }
 
     private void OpenDueSoonTasks_Click(object sender, RoutedEventArgs e)
     {
-        var w = new QuickTaskListWindow(QuickTaskFilter.DueSoon);
-        w.Owner = this;
-        w.ShowDialog();
+        try
+        {
+            OpenTaskList(QuickTaskFilter.DueSoon);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(this, $"打开任务列表失败：{ex.Message}", "FloatTodo", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    private void OpenTaskList(QuickTaskFilter filter)
+    {
+        var tasks = new TaskStorageService().Load();
+        var now = DateTime.Now;
+        var dueSoonLimit = now.AddHours(24);
+        var displayItems = new List<QuickTaskListItem>();
+
+        foreach (var task in tasks)
+        {
+            if (task.Status == FloatTodo.App.Models.TaskStatus.Done)
+            {
+                continue;
+            }
+
+            if (filter == QuickTaskFilter.DueSoon)
+            {
+                if (!task.DueTime.HasValue)
+                {
+                    continue;
+                }
+
+                var dueTime = task.DueTime.Value;
+                if (dueTime > dueSoonLimit)
+                {
+                    continue;
+                }
+            }
+
+            var dueTimeDisplay = task.DueTime.HasValue
+                ? task.DueTime.Value.ToString("yyyy-MM-dd HH:mm")
+                : "无截止时间";
+            var title = task.Title;
+
+            if (filter == QuickTaskFilter.DueSoon && task.DueTime.HasValue)
+            {
+                title += task.DueTime.Value < now ? "  (已逾期)" : "  (即将截止)";
+            }
+
+            displayItems.Add(new QuickTaskListItem(
+                title,
+                task.Priority.ToString(),
+                dueTimeDisplay));
+        }
+
+        var titleText = filter == QuickTaskFilter.Unfinished ? "未完成任务" : "快截止任务";
+        var emptyText = filter == QuickTaskFilter.Unfinished
+            ? "当前没有未完成任务。"
+            : "当前没有快截止任务。";
+        var window = new QuickTaskListWindow(titleText, emptyText, displayItems)
+        {
+            Owner = this
+        };
+        window.Show();
     }
 
     private void OpenProjectProgress_Click(object sender, RoutedEventArgs e)
