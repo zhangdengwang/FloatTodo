@@ -22,27 +22,10 @@ public partial class MiniWidgetWindow : Window
     {
         base.OnMouseLeftButtonDown(e);
 
-        _isLeftMouseDown = true;
-        _mouseDownPosition = e.GetPosition(this);
-        CaptureMouse();
-    }
-
-    private void Window_MouseMove(object sender, MouseEventArgs e)
-    {
-        if (!_isLeftMouseDown || _isDragging || e.LeftButton != MouseButtonState.Pressed)
-        {
-            return;
-        }
-
-        var currentPosition = e.GetPosition(this);
-        var deltaX = Math.Abs(currentPosition.X - _mouseDownPosition.X);
-        var deltaY = Math.Abs(currentPosition.Y - _mouseDownPosition.Y);
-
-        if (deltaX > 5 || deltaY > 5)
+        if (e.ButtonState == MouseButtonState.Pressed)
         {
             try
             {
-                _isDragging = true;
                 DragMove();
                 ClampToScreen();
             }
@@ -53,16 +36,14 @@ public partial class MiniWidgetWindow : Window
         }
     }
 
+    private void Window_MouseMove(object sender, MouseEventArgs e)
+    {
+        // XAML 中保留绑定，但左键拖动由 DragMove() 处理。
+    }
+
     private void Window_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
     {
-        if (_isLeftMouseDown && !_isDragging)
-        {
-            ToggleMainPanelRequested?.Invoke(this, EventArgs.Empty);
-        }
-
-        _isLeftMouseDown = false;
-        _isDragging = false;
-        ReleaseMouseCapture();
+        // 左键松开时不触发主面板切换。
     }
 
     private void ClampToScreen()
@@ -99,6 +80,15 @@ public partial class MiniWidgetWindow : Window
     private void ToggleMainWindowMenuItem_Click(object sender, RoutedEventArgs e)
     {
         ToggleMainPanelRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void OnPlaceholderMenuItemClick(object sender, RoutedEventArgs e)
+    {
+        MessageBox.Show(this,
+            "功能入口已创建，后续接入小面板",
+            "FloatTodo",
+            MessageBoxButton.OK,
+            MessageBoxImage.Information);
     }
 
     private void ExitMenuItem_Click(object sender, RoutedEventArgs e)

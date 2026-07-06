@@ -19,9 +19,43 @@
         Closing="MiniWidgetWindow_Closing">
     <Window.ContextMenu>
         <ContextMenu>
-            <MenuItem Header="显示/隐藏主面板"
-                      Click="ToggleMainWindowMenuItem_Click"/>
+            <MenuItem Header="任务">
+                <MenuItem Header="新增任务..."
+                        Click="OnPlaceholderMenuItemClick"/>
+                <MenuItem Header="查看未完成任务"
+                        Click="OnPlaceholderMenuItemClick"/>
+                <MenuItem Header="查看快截止任务"
+                        Click="OnPlaceholderMenuItemClick"/>
+            </MenuItem>
+            <MenuItem Header="AI 拆解">
+                <MenuItem Header="新建项目拆解..."
+                        Click="OnPlaceholderMenuItemClick"/>
+                <MenuItem Header="查看候选任务"
+                        Click="OnPlaceholderMenuItemClick"/>
+            </MenuItem>
+            <MenuItem Header="日常记录">
+                <MenuItem Header="喝水 +1"
+                        Click="OnPlaceholderMenuItemClick"/>
+                <MenuItem Header="休息眼睛 +1"
+                        Click="OnPlaceholderMenuItemClick"/>
+                <MenuItem Header="起身活动 +1"
+                        Click="OnPlaceholderMenuItemClick"/>
+                <MenuItem Header="新增记录项..."
+                        Click="OnPlaceholderMenuItemClick"/>
+            </MenuItem>
+            <MenuItem Header="项目进度">
+                <MenuItem Header="查看项目进度"
+                        Click="OnPlaceholderMenuItemClick"/>
+            </MenuItem>
+            <MenuItem Header="设置">
+                <MenuItem Header="API Key 设置..."
+                        Click="OnPlaceholderMenuItemClick"/>
+                <MenuItem Header="关于 FloatTodo"
+                        Click="OnPlaceholderMenuItemClick"/>
+            </MenuItem>
             <Separator/>
+            <MenuItem Header="打开完整面板"
+                      Click="ToggleMainWindowMenuItem_Click"/>
             <MenuItem Header="退出"
                       Click="ExitMenuItem_Click"/>
         </ContextMenu>
