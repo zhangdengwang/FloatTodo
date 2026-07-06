@@ -25,6 +25,93 @@
                                Margin="0,4,0,0"/>
                 </StackPanel>
 
+                <!-- 日常记录区域 -->
+                <Border Margin="0,0,0,12"
+                        Padding="12"
+                        Background="White"
+                        CornerRadius="12"
+                        BorderBrush="#F0F0F0"
+                        BorderThickness="1">
+                    <StackPanel>
+                        <TextBlock Text="日常记录"
+                                   FontSize="15"
+                                   FontWeight="SemiBold"
+                                   Foreground="#2F2F2F"/>
+
+                        <StackPanel Orientation="Horizontal"
+                                Margin="0,8,0,0">
+                            <TextBox Width="140"
+                                     Text="{Binding DailyRecords.NewRecordName, UpdateSourceTrigger=PropertyChanged}"
+                                     Padding="6"/>
+                            <TextBox Width="80"
+                                    Margin="8,0,0,0"
+                                     Text="{Binding DailyRecords.NewRecordIcon, UpdateSourceTrigger=PropertyChanged}"
+                                     Padding="6"/>
+                            <Button Content="新增"
+                                    Margin="8,0,0,0"
+                                    Padding="6"
+                                    Command="{Binding DailyRecords.AddRecordCommand}"/>
+                        </StackPanel>
+
+                        <ItemsControl ItemsSource="{Binding DailyRecords.Records}"
+                                      Margin="0,8,0,0">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Margin="0,0,0,8"
+                                            Padding="8"
+                                            Background="#FAFAFA"
+                                            CornerRadius="8">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <TextBlock Text="{Binding IconText}"
+                                                       FontSize="18"
+                                                       VerticalAlignment="Center"
+                                                       Margin="0,0,8,0"/>
+
+                                            <StackPanel Grid.Column="1">
+                                                <TextBlock Text="{Binding Name}"
+                                                        FontWeight="SemiBold"/>
+                                                <StackPanel Orientation="Horizontal"
+                                                        Margin="0,4,0,0">
+                                                    <TextBlock Text="次数: "
+                                                            FontSize="12"
+                                                            Foreground="#6F6F6F"/>
+                                                    <TextBlock Text="{Binding TodayCount}"
+                                                            FontSize="12"
+                                                            Foreground="#2F2F2F"/>
+                                                    <TextBlock Text="  上次: "
+                                                            Margin="8,0,0,0"
+                                                            FontSize="12"
+                                                            Foreground="#6F6F6F"/>
+                                                    <TextBlock Text="{Binding LastRecordTime, StringFormat={}{0:yyyy/MM/dd HH:mm}, TargetNullValue=未记录}"
+                                                            FontSize="12"
+                                                            Foreground="#6F6F6F"/>
+                                                </StackPanel>
+                                                <TextBlock Text="{Binding TimeSinceLastRecord}"
+                                                        FontSize="12"
+                                                        Foreground="#8A8A8A"/>
+                                            </StackPanel>
+
+                                            <StackPanel Grid.Column="2"
+                                                    VerticalAlignment="Center">
+                                                <Button Content="+1"
+                                                        Padding="6"
+                                                        Command="{Binding DataContext.DailyRecords.IncrementCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding}"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
                 <Border Margin="0,0,0,12"
                         Padding="12"
                         Background="White"
@@ -56,10 +143,10 @@
                             </Grid.ColumnDefinitions>
 
                             <StackPanel Grid.Column="0"
-                                    Margin="0,0,8,0">
+                                        Margin="0,0,8,0">
                                 <TextBlock Text="优先级"
-                                        FontSize="12"
-                                        Foreground="#6F6F6F"/>
+                                           FontSize="12"
+                                           Foreground="#6F6F6F"/>
                                 <ComboBox Margin="0,4,0,0"
                                           ItemsSource="{Binding Priorities}"
                                           SelectedItem="{Binding NewTaskPriority}"/>
@@ -67,8 +154,8 @@
 
                             <StackPanel Grid.Column="1">
                                 <TextBlock Text="截止时间"
-                                        FontSize="12"
-                                        Foreground="#6F6F6F"/>
+                                           FontSize="12"
+                                           Foreground="#6F6F6F"/>
                                 <DatePicker Margin="0,4,0,0"
                                             SelectedDate="{Binding NewTaskDueTime}"/>
                             </StackPanel>
@@ -116,12 +203,12 @@
                                         <StackPanel Orientation="Horizontal"
                                                     Margin="0,8,0,0">
                                             <TextBlock Text="{Binding Priority}"
-                                                    FontSize="12"
-                                                    Foreground="#7A4B00"
-                                                    Margin="0,0,10,0"/>
+                                                       FontSize="12"
+                                                       Foreground="#7A4B00"
+                                                       Margin="0,0,10,0"/>
                                             <TextBlock Text="{Binding Status}"
-                                                    FontSize="12"
-                                                    Foreground="#0F6C3B"/>
+                                                       FontSize="12"
+                                                       Foreground="#0F6C3B"/>
                                         </StackPanel>
 
                                         <TextBlock Margin="0,6,0,0"
@@ -131,7 +218,7 @@
                                     </StackPanel>
 
                                     <StackPanel Grid.Column="1"
-                                            Margin="10,0,0,0">
+                                                Margin="10,0,0,0">
                                         <Button Content="完成"
                                                 Margin="0,0,0,6"
                                                 Command="{Binding DataContext.CompleteTaskCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"

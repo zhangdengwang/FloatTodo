@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
 using FloatTodo.App.Models;
+using FloatTodo.App.Services;
 
 namespace FloatTodo.App.ViewModels;
 
@@ -17,14 +18,39 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private TaskPriority _newTaskPriority = TaskPriority.Normal;
     private DateTime? _newTaskDueTime;
 
+    private readonly TaskStorageService _storage;
+
     public MainViewModel()
     {
+        _storage = new TaskStorageService();
+
         AddTaskCommand = new RelayCommand(_ => AddTask(), _ => CanAddTask());
         DeleteTaskCommand = new RelayCommand(parameter => DeleteTask((TaskItem)parameter!), _ => true);
         CompleteTaskCommand = new RelayCommand(parameter => CompleteTask((TaskItem)parameter!), _ => true);
+
+        Tasks = new ObservableCollection<TaskItem>();
+
+        // Load persisted tasks on startup. Failures fall back to empty list.
+        try
+        {
+            var items = _storage.Load();
+            foreach (var t in items)
+            {
+                Tasks.Add(t);
+            }
+        }
+        catch
+        {
+            // Swallow any load errors to keep app running with empty tasks.
+        }
+        // Initialize daily records sub-viewmodel (keeps daily records separate).
+        DailyRecords = new DailyRecordsViewModel();
     }
 
-    public ObservableCollection<TaskItem> Tasks { get; } = [];
+    public ObservableCollection<TaskItem> Tasks { get; }
+
+    // Expose daily records view model to the view so the UI can bind to it.
+    public DailyRecordsViewModel DailyRecords { get; }
 
     public TaskPriority[] Priorities { get; } = Enum.GetValues<TaskPriority>();
 
@@ -113,6 +139,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
         Tasks.Insert(0, task);
         ClearNewTaskForm();
+        SaveTasks();
     }
 
     private void DeleteTask(TaskItem? task)
@@ -120,6 +147,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         if (task is not null)
         {
             Tasks.Remove(task);
+            SaveTasks();
         }
     }
 
@@ -133,6 +161,19 @@ public sealed class MainViewModel : INotifyPropertyChanged
         // Marking the task as done updates the card state immediately.
         task.Status = FloatTodo.App.Models.TaskStatus.Done;
         task.CompletedAt = DateTime.Now;
+        SaveTasks();
+    }
+
+    private void SaveTasks()
+    {
+        try
+        {
+            _storage.Save(Tasks);
+        }
+        catch
+        {
+            // If save fails, do not crash the app. Consider showing a notification in future.
+        }
     }
 
     private void ClearNewTaskForm()
