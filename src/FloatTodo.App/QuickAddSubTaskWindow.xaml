@@ -51,12 +51,21 @@
         <TextBlock Grid.Row="3"
                    Text="截止时间"
                    VerticalAlignment="Center"/>
-        <TextBox x:Name="DueTimeTextBox"
-                 Grid.Row="3"
-                 Grid.Column="1"
-                 Margin="0,4"
-                 VerticalContentAlignment="Center"
-                 ToolTip="HH:mm，可空；留空时默认为 23:59"/>
+        <StackPanel Grid.Row="3"
+                    Grid.Column="1"
+                    Orientation="Horizontal"
+                    Margin="0,4">
+            <ComboBox x:Name="DueHourComboBox"
+                      Width="72"/>
+            <TextBlock Text="时"
+                       VerticalAlignment="Center"
+                       Margin="6,0,10,0"/>
+            <ComboBox x:Name="DueMinuteComboBox"
+                      Width="72"/>
+            <TextBlock Text="分"
+                       VerticalAlignment="Center"
+                       Margin="6,0,0,0"/>
+        </StackPanel>
 
         <StackPanel Grid.Row="4"
                     Grid.ColumnSpan="2"

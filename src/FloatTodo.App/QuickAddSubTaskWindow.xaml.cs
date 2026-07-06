@@ -1,5 +1,4 @@
 using System;
-using System.Globalization;
 using System.Windows;
 using FloatTodo.App.Models;
 using FloatTodo.App.ViewModels;
@@ -14,6 +13,7 @@ public partial class QuickAddSubTaskWindow : Window
     {
         _project = project ?? throw new ArgumentNullException(nameof(project));
         InitializeComponent();
+        InitializeTimeSelectors();
         Title = $"新增小任务 - {_project.Title}";
     }
 
@@ -67,26 +67,33 @@ public partial class QuickAddSubTaskWindow : Window
             return true;
         }
 
-        var selectedTime = new TimeSpan(23, 59, 0);
-        var timeText = DueTimeTextBox.Text.Trim();
-        if (!string.IsNullOrEmpty(timeText))
+        if (DueHourComboBox.SelectedItem is string hourText)
         {
-            if (!DateTime.TryParseExact(
-                    timeText,
-                    "HH:mm",
-                    CultureInfo.InvariantCulture,
-                    DateTimeStyles.None,
-                    out var parsedTime))
-            {
-                MessageBox.Show(this, "时间格式应为 HH:mm", "提示", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return false;
-            }
-
-            selectedTime = parsedTime.TimeOfDay;
+            var hour = int.Parse(hourText);
+            var minute = DueMinuteComboBox.SelectedItem is string minuteText
+                ? int.Parse(minuteText)
+                : 0;
+            dueTime = selectedDate.Date.AddHours(hour).AddMinutes(minute);
+        }
+        else
+        {
+            dueTime = selectedDate.Date.AddHours(23).AddMinutes(59);
         }
 
-        dueTime = selectedDate.Date.Add(selectedTime);
         return true;
+    }
+
+    private void InitializeTimeSelectors()
+    {
+        for (var hour = 0; hour < 24; hour++)
+        {
+            DueHourComboBox.Items.Add(hour.ToString("00"));
+        }
+
+        foreach (var minute in new[] { "00", "15", "30", "45" })
+        {
+            DueMinuteComboBox.Items.Add(minute);
+        }
     }
 
     private static void AddTask(TaskItem task)

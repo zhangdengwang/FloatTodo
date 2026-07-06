@@ -25,7 +25,11 @@ public partial class MiniWidgetWindow : Window
         {
             Interval = TimeSpan.FromSeconds(30)
         };
-        _reminderTimer.Tick += (_, _) => RefreshDailyReminderState();
+        _reminderTimer.Tick += (_, _) =>
+        {
+            RefreshDailyReminderState();
+            RefreshPetState();
+        };
         Loaded += (_, _) =>
         {
             _ = new DailyRecordsViewModel();
@@ -139,13 +143,7 @@ public partial class MiniWidgetWindow : Window
 
             if (filter == QuickTaskFilter.DueSoon)
             {
-                if (!task.DueTime.HasValue)
-                {
-                    continue;
-                }
-
-                var dueTime = task.DueTime.Value;
-                if (dueTime > dueSoonLimit)
+                if (!IsUrgentTask(task, dueSoonLimit))
                 {
                     continue;
                 }
@@ -312,6 +310,14 @@ public partial class MiniWidgetWindow : Window
         return $"{name} +1（次数：{count}，上次：{lastRecordTime}，阈值：{thresholdText}）";
     }
 
+    private static bool IsUrgentTask(TaskItem task, DateTime dueSoonLimit)
+    {
+        return !task.IsProject &&
+               task.Status != FloatTodo.App.Models.TaskStatus.Done &&
+               task.DueTime.HasValue &&
+               task.DueTime.Value <= dueSoonLimit;
+    }
+
     private static List<DailyRecordItem> GetDailyRecordsSnapshot()
     {
         return Application.Current is App app && app.GetMainViewModel() is { } mainViewModel
@@ -429,16 +435,14 @@ public partial class MiniWidgetWindow : Window
                 !t.IsProject &&
                 t.Status != FloatTodo.App.Models.TaskStatus.Done);
             var now = DateTime.Now;
-            var dueSoon = tasks.Count(t =>
-                !t.IsProject &&
-                t.Status != FloatTodo.App.Models.TaskStatus.Done &&
-                t.DueTime.HasValue &&
-                t.DueTime.Value <= now.AddHours(24));
+            var dueSoonLimit = now.AddHours(24);
+            var dueSoon = tasks.Count(t => IsUrgentTask(t, dueSoonLimit));
 
             if (unfinished == 0)
             {
                 PetImage.Source = new BitmapImage(new Uri("pack://application:,,,/Assets/Pet/pet_no_task.png"));
                 BadgeRoot.Visibility = Visibility.Collapsed;
+                BadgeText.Text = string.Empty;
             }
             else if (dueSoon > 0)
             {
@@ -449,8 +453,8 @@ public partial class MiniWidgetWindow : Window
             else
             {
                 PetImage.Source = new BitmapImage(new Uri("pack://application:,,,/Assets/Pet/pet_has_task.png"));
-                BadgeRoot.Visibility = unfinished > 0 ? Visibility.Visible : Visibility.Collapsed;
-                BadgeText.Text = unfinished >= 100 ? "99+" : unfinished.ToString();
+                BadgeRoot.Visibility = Visibility.Collapsed;
+                BadgeText.Text = string.Empty;
             }
         }
         catch

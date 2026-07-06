@@ -1,5 +1,4 @@
 using System;
-using System.Globalization;
 using System.Windows;
 using FloatTodo.App.Models;
 using FloatTodo.App.ViewModels;
@@ -11,6 +10,7 @@ public partial class QuickAddTaskWindow : Window
     public QuickAddTaskWindow()
     {
         InitializeComponent();
+        InitializeTimeSelectors();
     }
 
     private void CancelButton_Click(object sender, RoutedEventArgs e)
@@ -41,25 +41,18 @@ public partial class QuickAddTaskWindow : Window
         DateTime? dueTime = null;
         if (DueDatePicker.SelectedDate is DateTime selectedDate)
         {
-            var selectedTime = new TimeSpan(23, 59, 0);
-            var dueTimeText = DueTimeTextBox.Text.Trim();
-            if (!string.IsNullOrEmpty(dueTimeText))
+            if (DueHourComboBox.SelectedItem is string hourText)
             {
-                if (!DateTime.TryParseExact(
-                        dueTimeText,
-                        "HH:mm",
-                        CultureInfo.InvariantCulture,
-                        DateTimeStyles.None,
-                        out var parsedTime))
-                {
-                    MessageBox.Show(this, "时间格式应为 HH:mm", "提示", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                selectedTime = parsedTime.TimeOfDay;
+                var hour = int.Parse(hourText);
+                var minute = DueMinuteComboBox.SelectedItem is string minuteText
+                    ? int.Parse(minuteText)
+                    : 0;
+                dueTime = selectedDate.Date.AddHours(hour).AddMinutes(minute);
             }
-
-            dueTime = selectedDate.Date.Add(selectedTime);
+            else
+            {
+                dueTime = selectedDate.Date.AddHours(23).AddMinutes(59);
+            }
         }
 
         var task = new TaskItem
@@ -87,5 +80,18 @@ public partial class QuickAddTaskWindow : Window
         var backupViewModel = new MainViewModel();
         backupViewModel.AddTaskItem(task);
         Close();
+    }
+
+    private void InitializeTimeSelectors()
+    {
+        for (var hour = 0; hour < 24; hour++)
+        {
+            DueHourComboBox.Items.Add(hour.ToString("00"));
+        }
+
+        foreach (var minute in new[] { "00", "15", "30", "45" })
+        {
+            DueMinuteComboBox.Items.Add(minute);
+        }
     }
 }
