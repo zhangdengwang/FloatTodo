@@ -103,12 +103,18 @@ public partial class QuickTaskListWindow : Window
         }
 
         var detail = new QuickTaskDetailWindow(new TaskDetailDisplayItem(
+            item.Id,
             item.Title,
             item.Priority,
             item.DueTimeDisplay,
             item.ProjectName,
             item.StatusDisplay,
-            item.Description))
+            item.Description),
+            () =>
+            {
+                RefreshTasks();
+                _afterTaskChanged?.Invoke();
+            })
         {
             Owner = this
         };

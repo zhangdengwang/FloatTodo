@@ -68,12 +68,18 @@ public partial class QuickProjectTasksWindow : Window
         }
 
         var detail = new QuickTaskDetailWindow(new TaskDetailDisplayItem(
+            item.Id,
             item.Title,
             item.Priority,
             item.DueTimeDisplay.Replace("截止：", string.Empty),
             item.ProjectName,
             item.StatusDisplay,
-            item.Description))
+            item.Description),
+            () =>
+            {
+                LoadTasks();
+                _afterTaskChanged?.Invoke();
+            })
         {
             Owner = this
         };

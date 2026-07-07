@@ -12,7 +12,7 @@ namespace FloatTodo.App;
 
 /// <summary>
 /// 小桌宠悬浮窗口。
-/// 负责显示桌宠图片、任务红点、日常提醒，并作为右键菜单入口。
+/// 负责显示桌宠图片、任务红点、日常提醒、截止任务提醒，并作为右键菜单入口。
 /// </summary>
 public partial class MiniWidgetWindow : Window
 {
@@ -32,6 +32,10 @@ public partial class MiniWidgetWindow : Window
     // 当前正在提醒文字区域显示的日常记录项名称。
     // 双击提醒气泡时只给这一项 +1，避免误操作其他日常记录。
     private string? _currentReminderRecordName;
+
+    // 当前正在显示的截止任务提醒 Id。
+    // 双击截止提醒时只打开这一条任务详情，避免误触桌宠图片或其他透明区域。
+    private Guid? _currentDueReminderTaskId;
 
     public MiniWidgetWindow()
     {
@@ -370,6 +374,67 @@ public partial class MiniWidgetWindow : Window
         AddDailyRecord(_currentReminderRecordName, string.Empty, string.Empty);
     }
 
+    /// <summary>
+    /// 截止任务提醒区域的双击操作。
+    /// 双击只打开当前提醒任务的详情窗口，不直接完成任务，避免用户误操作导致任务状态变化。
+    /// </summary>
+    private void DueReminder_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        // 截止提醒气泡独立处理鼠标事件，避免双击时触发窗口拖动。
+        e.Handled = true;
+
+        if (e.ClickCount == 2)
+        {
+            OpenCurrentDueReminderTaskDetail();
+        }
+    }
+
+    /// <summary>
+    /// 打开当前截止提醒对应的任务详情。
+    /// 详情窗口中的完成/删除操作仍复用现有任务存储服务，并在操作后刷新桌宠状态。
+    /// </summary>
+    private void OpenCurrentDueReminderTaskDetail()
+    {
+        if (!_currentDueReminderTaskId.HasValue)
+        {
+            return;
+        }
+
+        try
+        {
+            var task = GetTaskSnapshot()
+                .FirstOrDefault(item => item.Id == _currentDueReminderTaskId.Value && !item.IsProject);
+            if (task == null)
+            {
+                RefreshDueTaskReminderState();
+                return;
+            }
+
+            var detail = new QuickTaskDetailWindow(
+                new TaskDetailDisplayItem(
+                    task.Id,
+                    task.Title,
+                    task.Priority.ToString(),
+                    task.DueTime.HasValue ? task.DueTime.Value.ToString("yyyy-MM-dd HH:mm") : "无截止时间",
+                    task.ProjectName,
+                    task.Status == FloatTodo.App.Models.TaskStatus.Done ? "已完成" : "未完成",
+                    task.Description),
+                () =>
+                {
+                    RefreshPetState();
+                    _quickProjectListWindow?.RefreshProjects();
+                })
+            {
+                Owner = this
+            };
+            detail.Show();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(this, $"打开任务详情失败：{ex.Message}", "FloatTodo", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
     private void ContextMenu_Opened(object sender, RoutedEventArgs e)
     {
         // 右键菜单每次打开时刷新次数和上次记录时间，避免菜单文字停留在旧状态。
@@ -476,6 +541,47 @@ public partial class MiniWidgetWindow : Window
         {
             _currentReminderRecordName = null;
             ReminderRoot.Visibility = Visibility.Collapsed;
+        }
+    }
+
+    /// <summary>
+    /// 刷新截止任务提醒文字。
+    /// 规则与桌宠红点保持一致：只提醒 24 小时内截止或已经逾期的未完成非项目任务，并只展示最紧急的一条。
+    /// </summary>
+    private void RefreshDueTaskReminderState()
+    {
+        try
+        {
+            var now = DateTime.Now;
+            var dueSoonLimit = now.AddHours(24);
+            var task = GetTaskSnapshot()
+                .Where(item => IsUrgentTask(item, dueSoonLimit))
+                .OrderBy(item => GetDueSortGroup(item.DueTime, now, dueSoonLimit))
+                .ThenBy(item => item.DueTime ?? DateTime.MaxValue)
+                .ThenBy(item => item.Title, StringComparer.CurrentCulture)
+                .FirstOrDefault();
+
+            if (task == null)
+            {
+                _currentDueReminderTaskId = null;
+                DueReminderText.Text = string.Empty;
+                DueReminderRoot.Visibility = Visibility.Collapsed;
+                DueReminderRoot.ToolTip = "双击查看任务详情";
+                return;
+            }
+
+            _currentDueReminderTaskId = task.Id;
+            DueReminderText.Text = task.Title;
+            DueReminderRoot.ToolTip = task.DueTime.HasValue
+                ? $"双击查看任务详情\n截止时间：{task.DueTime.Value:yyyy-MM-dd HH:mm}"
+                : "双击查看任务详情";
+            DueReminderRoot.Visibility = Visibility.Visible;
+        }
+        catch
+        {
+            _currentDueReminderTaskId = null;
+            DueReminderText.Text = string.Empty;
+            DueReminderRoot.Visibility = Visibility.Collapsed;
         }
     }
 
@@ -617,10 +723,25 @@ public partial class MiniWidgetWindow : Window
                 BadgeRoot.Visibility = Visibility.Collapsed;
                 BadgeText.Text = string.Empty;
             }
+
+            // 截止任务提醒与红点使用同一组筛选规则，任务新增/完成/删除后跟随桌宠状态一起刷新。
+            RefreshDueTaskReminderState();
         }
         catch
         {
             // keep pet stable
         }
+    }
+
+    private static IReadOnlyCollection<TaskItem> GetTaskSnapshot()
+    {
+        // 优先读取主面板 ViewModel 中的内存任务；主面板未创建时，从同一个 tasks.json 读取。
+        // 这样截止提醒、红点和快捷任务列表始终使用同一套任务数据。
+        if (Application.Current is App app && app.GetMainViewModel() is { } mainVm)
+        {
+            return mainVm.Tasks.ToList();
+        }
+
+        return new TaskStorageService().Load();
     }
 }

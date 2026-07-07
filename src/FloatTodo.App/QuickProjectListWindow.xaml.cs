@@ -89,6 +89,7 @@ public partial class QuickProjectListWindow : Window
         }
 
         var detail = new QuickTaskDetailWindow(new TaskDetailDisplayItem(
+            null,
             project.Title,
             project.Priority.ToString(),
             project.DueTime.HasValue ? project.DueTime.Value.ToString("yyyy-MM-dd HH:mm") : "无截止时间",

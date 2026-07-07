@@ -5,8 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
         Title="FloatTodo Mini"
-        Width="120"
-        Height="120"
+        Width="300"
+        Height="130"
         WindowStyle="None"
         AllowsTransparency="True"
         Background="Transparent"
@@ -66,9 +66,14 @@
     </Window.ContextMenu>
     <!-- 透明命中区域：背景不可见，但仍能接收鼠标事件，保证拖动和右键菜单可用。 -->
     <Grid Background="Transparent">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="120"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
         <Border Background="Transparent"
                 CornerRadius="20"
-                HorizontalAlignment="Center"
+                HorizontalAlignment="Left"
                 VerticalAlignment="Center"
                 Width="120"
                 Height="120">
@@ -129,6 +134,37 @@
                                MaxWidth="104"/>
                 </Border>
             </Grid>
+        </Border>
+
+        <!-- 截止任务提醒区域：和红点使用同一组“24 小时内截止或已逾期”规则，只显示最紧急的一条。 -->
+        <Border x:Name="DueReminderRoot"
+                Grid.Column="1"
+                Background="#EEFFFFFF"
+                BorderBrush="#66000000"
+                BorderThickness="1"
+                CornerRadius="10"
+                Padding="9,6"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                Margin="4,0,0,0"
+                Visibility="Collapsed"
+                MouseLeftButtonDown="DueReminder_MouseLeftButtonDown"
+                ToolTip="双击查看任务详情">
+            <StackPanel MaxWidth="160">
+                <TextBlock Text="截止提醒"
+                           Foreground="#D92D2D"
+                           FontSize="11"
+                           FontWeight="Bold"/>
+                <TextBlock x:Name="DueReminderText"
+                           Text="任务标题"
+                           Foreground="#222"
+                           FontSize="12"
+                           FontWeight="SemiBold"
+                           TextWrapping="NoWrap"
+                           TextTrimming="CharacterEllipsis"
+                           MaxWidth="160"
+                           Margin="0,2,0,0"/>
+            </StackPanel>
         </Border>
     </Grid>
 </Window>
