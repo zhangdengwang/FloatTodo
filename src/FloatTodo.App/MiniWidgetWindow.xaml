@@ -117,7 +117,9 @@
                         HorizontalAlignment="Center"
                         VerticalAlignment="Bottom"
                         Margin="2"
-                        Visibility="Collapsed">
+                        Visibility="Collapsed"
+                        MouseLeftButtonDown="DailyReminder_MouseLeftButtonDown"
+                        ToolTip="双击可直接记录一次">
                     <TextBlock x:Name="ReminderText"
                                Text="请喝水"
                                Foreground="#222"

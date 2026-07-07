@@ -29,6 +29,10 @@ public partial class MiniWidgetWindow : Window
     // 这样即使用户没有打开菜单，任务进入 24 小时范围时桌宠状态也能自动更新。
     private readonly DispatcherTimer _reminderTimer;
 
+    // 当前正在提醒文字区域显示的日常记录项名称。
+    // 双击提醒气泡时只给这一项 +1，避免误操作其他日常记录。
+    private string? _currentReminderRecordName;
+
     public MiniWidgetWindow()
     {
         InitializeComponent();
@@ -298,6 +302,35 @@ public partial class MiniWidgetWindow : Window
         }
     }
 
+    /// <summary>
+    /// 日常提醒文字区域的双击快捷操作。
+    /// 这是为了减少“右键菜单 → 日常记录 → +1”的操作层级，只处理当前正在显示的提醒项。
+    /// </summary>
+    private void DailyReminder_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        // 提醒气泡区域不参与窗口拖动，避免双击时同时触发 DragMove。
+        e.Handled = true;
+
+        if (e.ClickCount == 2)
+        {
+            CompleteCurrentDailyReminder();
+        }
+    }
+
+    /// <summary>
+    /// 给当前显示的日常提醒项记录一次。
+    /// 保存仍复用现有日常记录 +1 逻辑，不新增存储路径或 JSON 格式。
+    /// </summary>
+    private void CompleteCurrentDailyReminder()
+    {
+        if (string.IsNullOrWhiteSpace(_currentReminderRecordName))
+        {
+            return;
+        }
+
+        AddDailyRecord(_currentReminderRecordName, string.Empty, string.Empty);
+    }
+
     private void ContextMenu_Opened(object sender, RoutedEventArgs e)
     {
         // 右键菜单每次打开时刷新次数和上次记录时间，避免菜单文字停留在旧状态。
@@ -390,16 +423,19 @@ public partial class MiniWidgetWindow : Window
 
             if (earliestReminder == null)
             {
+                _currentReminderRecordName = null;
                 ReminderRoot.Visibility = Visibility.Collapsed;
                 ReminderText.Text = string.Empty;
                 return;
             }
 
+            _currentReminderRecordName = earliestReminder.Name;
             ReminderText.Text = $"请{earliestReminder.Name}";
             ReminderRoot.Visibility = Visibility.Visible;
         }
         catch
         {
+            _currentReminderRecordName = null;
             ReminderRoot.Visibility = Visibility.Collapsed;
         }
     }
