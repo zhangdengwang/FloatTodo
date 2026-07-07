@@ -4,6 +4,10 @@ using System.Runtime.CompilerServices;
 
 namespace FloatTodo.App.Models;
 
+/// <summary>
+/// 项目进度展示模型。
+/// 进度不是单独保存的数据，而是根据项目父节点下的小任务完成情况实时计算出来的。
+/// </summary>
 public sealed class ProjectProgressItem : INotifyPropertyChanged
 {
     private string _projectId = string.Empty;

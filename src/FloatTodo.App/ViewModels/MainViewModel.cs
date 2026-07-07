@@ -11,7 +11,8 @@ using FloatTodo.App.Services;
 namespace FloatTodo.App.ViewModels;
 
 /// <summary>
-/// View model for the main todo shell. The data is kept in memory only for this phase.
+/// 主面板 ViewModel。
+/// 负责维护任务集合、项目进度、日常记录和 AI 设置，并统一调用 TaskStorageService 保存任务 JSON。
 /// </summary>
 public sealed class MainViewModel : INotifyPropertyChanged
 {
@@ -35,10 +36,11 @@ public sealed class MainViewModel : INotifyPropertyChanged
         Tasks = new ObservableCollection<TaskItem>();
         ProjectProgressList = new ObservableCollection<ProjectProgressItem>();
 
-        // Keep progress in sync when tasks collection changes
+        // 任务集合变化时重新计算项目进度，保证新增/删除项目小任务后展示同步更新。
         Tasks.CollectionChanged += TasksOnCollectionChanged;
 
-        // Load persisted tasks on startup. Failures fall back to empty list.
+        // 启动时从 tasks.json 读取历史任务。
+        // 读取失败会回退为空列表，避免本地数据损坏导致主界面无法打开。
         try
         {
             var items = _storage.Load();
@@ -46,7 +48,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             {
                 Tasks.Add(t);
             }
-            // Attach handlers for loaded tasks
+            // 已加载任务也要挂 PropertyChanged，后续状态变化才能触发项目进度刷新。
             foreach (var t in Tasks)
             {
                 AttachTaskHandler(t);
@@ -56,12 +58,12 @@ public sealed class MainViewModel : INotifyPropertyChanged
         {
             // Swallow any load errors to keep app running with empty tasks.
         }
-        // Initialize daily records sub-viewmodel (keeps daily records separate).
+        // 日常记录、API 设置和 AI 拆解各自维护独立 ViewModel，主 ViewModel 只负责组合它们。
         DailyRecords = new DailyRecordsViewModel();
         AiSettings = new ApiSettingsViewModel(_apiSettingsService);
         AiPlanner = new AiPlannerViewModel(this, new AiPlannerService(_apiSettingsService));
 
-        // initial calculation
+        // 首次加载后计算一次项目进度，避免界面初始为空。
         RecalculateProjectProgress();
     }
 
@@ -71,14 +73,14 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     public ObservableCollection<TaskItem> Tasks { get; }
 
-    // Expose daily records view model to the view so the UI can bind to it.
+    // 暴露日常记录 ViewModel，供 ShellView 和桌宠复用同一份内存状态。
     public DailyRecordsViewModel DailyRecords { get; }
 
     public ApiSettingsViewModel AiSettings { get; }
 
     public TaskPriority[] Priorities { get; } = Enum.GetValues<TaskPriority>();
 
-    // Expose AI planner view model so the view can bind to it.
+    // 暴露 AI 拆解 ViewModel，完整面板和快捷窗口都能使用同一套拆解逻辑。
     public AiPlannerViewModel AiPlanner { get; }
 
     public string NewTaskTitle
@@ -154,7 +156,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
             return;
         }
 
-        // Create a new task in memory so the first stage can stay lightweight.
+        // 完整主面板里的普通任务新增入口。
+        // 这里创建的是非项目任务，因此 IsProject=false、ParentId=null。
         var task = new TaskItem
         {
             Title = NewTaskTitle.Trim(),
@@ -190,7 +193,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             return;
         }
 
-        // Marking the task as done updates the card state immediately.
+        // 标记完成时记录 CompletedAt，既方便界面展示，也为后续统计留出数据。
         task.Status = FloatTodo.App.Models.TaskStatus.Done;
         task.CompletedAt = DateTime.Now;
         SaveTasks();
@@ -205,7 +208,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
         catch
         {
-            // If save fails, do not crash the app. Consider showing a notification in future.
+            // 保存失败不让应用崩溃；当前版本以轻量演示为主，后续可替换成非阻塞通知。
         }
     }
 
@@ -218,9 +221,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
     }
 
     /// <summary>
-    /// Adds a TaskItem to the main task list and persists immediately. This is
-    /// used by other sub viewmodels (for example the AI planner) to inject
-    /// tasks programmatically while keeping persistence consistent.
+    /// 从快捷窗口或 AI 拆解等外部入口加入任务，并立即保存。
+    /// 所有入口最终都走这里，保证任务列表、项目进度和 JSON 存储保持一致。
     /// </summary>
     public void AddTaskItem(TaskItem task)
     {
@@ -274,6 +276,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
     {
         try
         {
+            // 项目进度不单独存储，而是扫描所有 IsProject=true 的父节点，
+            // 再统计 ParentId 指向它的子任务数量和完成数量。
             var groups = Tasks.Where(task => task.IsProject)
                 .Select(project =>
                 {
@@ -293,8 +297,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 })
                 .ToList();
 
-            // Update ProjectProgressList to match groups
-            // Remove entries not present
+            // 先移除已经不存在的项目进度项，避免删除项目后进度列表残留旧数据。
             var existingIds = ProjectProgressList.Select(p => p.ProjectId).ToList();
             foreach (var id in existingIds)
             {
@@ -307,6 +310,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
             foreach (var g in groups)
             {
+                // 已存在的进度项只更新数值；新项目则新增一条展示项。
                 var item = ProjectProgressList.FirstOrDefault(p => p.ProjectId == g.ProjectId);
                 if (item == null)
                 {
@@ -324,7 +328,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
         catch
         {
-            // Swallow any progress calculation errors to avoid breaking UI.
+            // 进度是辅助展示，计算失败不应影响任务主流程。
         }
     }
 

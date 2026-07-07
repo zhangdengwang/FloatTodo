@@ -1,5 +1,7 @@
 $ErrorActionPreference = "Stop"
 
+# 定位项目根目录。
+# 脚本既支持从项目根目录运行，也支持进入 scripts 目录后运行，所以这里不能写死绝对路径。
 function Get-ProjectRoot {
     $scriptDirectory = Split-Path -Parent $PSCommandPath
 
@@ -15,6 +17,8 @@ function Get-ProjectRoot {
     throw "Unable to locate project root. Run this script from project root or scripts directory."
 }
 
+# README_运行说明.txt 的文件名和内容需要中文。
+# 为了兼容 Windows PowerShell 5 的脚本编码解析，这里用 Base64 保存 UTF-8 文本。
 function ConvertFrom-Base64Utf8 {
     param(
         [Parameter(Mandatory = $true)]
@@ -24,6 +28,8 @@ function ConvertFrom-Base64Utf8 {
     return [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($Value))
 }
 
+# 发布包不能带开发者本机数据。
+# publish 通常不会主动复制根目录 data，但这里再做一次清理，避免以后项目文件变更时误打包隐私内容。
 function Remove-PrivatePublishFiles {
     param(
         [Parameter(Mandatory = $true)]
@@ -66,6 +72,7 @@ Set-Location $projectRoot
 
 Write-Host "Project root: $projectRoot"
 
+# 正在运行的程序会占用 exe 或相关文件，发布前先关闭，避免 publish/zip 失败。
 $runningProcesses = Get-Process -Name "FloatTodo.App" -ErrorAction SilentlyContinue
 if ($runningProcesses) {
     Write-Host "Stopping running FloatTodo.App processes..."
@@ -75,6 +82,7 @@ if ($runningProcesses) {
 Write-Host "Running dotnet build..."
 dotnet build
 
+# 清理旧发布目录，保证 dist/FloatTodo-win-x64 中只包含本次发布产物。
 if (Test-Path $publishDirectory) {
     $resolvedPublishDirectory = Resolve-Path $publishDirectory
     $resolvedDistDirectory = Resolve-Path $distDirectory -ErrorAction SilentlyContinue
@@ -89,6 +97,8 @@ if (Test-Path $publishDirectory) {
 New-Item -ItemType Directory -Path $publishDirectory -Force | Out-Null
 
 Write-Host "Running dotnet publish for Windows x64 self-contained single-file package..."
+# self-contained 会把 .NET 运行时一起放进发布包，用户电脑无需额外安装 .NET。
+# SingleFile 让主要程序以一个 exe 分发，适合课程设计演示和发给同学试用。
 dotnet publish $projectPath `
   -c Release `
   -r win-x64 `
@@ -100,6 +110,7 @@ dotnet publish $projectPath `
 
 Remove-PrivatePublishFiles -PublishDirectory $publishDirectory
 
+# 在发布目录生成给最终用户看的运行说明，不要求用户阅读源码 README。
 [System.IO.File]::WriteAllText($readmePath, $readmeContent, [System.Text.Encoding]::UTF8)
 
 if (-not (Test-Path $exePath)) {
@@ -111,6 +122,7 @@ if (Test-Path $zipPath) {
 }
 
 Write-Host "Creating zip..."
+# zip 是最终分发物：别人解压后双击 FloatTodo.App.exe 即可运行。
 Compress-Archive -Path (Join-Path $publishDirectory "*") -DestinationPath $zipPath -Force
 
 if (-not (Test-Path $zipPath)) {

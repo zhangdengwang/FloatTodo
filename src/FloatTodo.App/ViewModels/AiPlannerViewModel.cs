@@ -11,8 +11,8 @@ using FloatTodo.App.Services;
 namespace FloatTodo.App.ViewModels;
 
 /// <summary>
-/// ViewModel for the AI planner UI. Produces candidate tasks and allows
-/// adding selected candidates into the main todo list.
+/// AI 拆解 ViewModel。
+/// 负责把用户输入发送给 AI 服务，接收候选任务，并在用户确认后创建项目和小任务。
 /// </summary>
 public sealed class AiPlannerViewModel : INotifyPropertyChanged
 {
@@ -31,7 +31,8 @@ public sealed class AiPlannerViewModel : INotifyPropertyChanged
         Candidates = new ObservableCollection<CandidateTask>();
 
         GenerateCommand = new RelayCommand(_ => { _ = GenerateAsync(); }, _ => !IsPlanning);
-        // The Add-to-tasks button should always be clickable; command handles empty/none-selected cases.
+        // “加入选中任务”按钮保持可点击，由命令内部负责提示“还没拆解”或“未选择任务”。
+        // 这样按钮始终可见，用户能明确知道下一步操作在哪里。
         AddSelectedToTasksCommand = new RelayCommand(_ => AddSelectedToTasks(), _ => true);
 
         Candidates.CollectionChanged += (s, e) => AttachCandidateHandlers();
@@ -101,7 +102,8 @@ public sealed class AiPlannerViewModel : INotifyPropertyChanged
         {
             var plan = await _service.PlanProjectAsync(ProjectDescription).ConfigureAwait(true);
 
-            // Determine project title and id for this batch
+            // 项目名优先使用用户输入；如果用户没填，则使用 AI 返回标题；再不行才从描述截取。
+            // 这样可以保证后续创建项目父节点时一定有一个可显示名称。
             var title = !string.IsNullOrWhiteSpace(ProjectName)
                 ? ProjectName.Trim()
                 : !string.IsNullOrWhiteSpace(plan.ProjectTitle)
@@ -110,7 +112,8 @@ public sealed class AiPlannerViewModel : INotifyPropertyChanged
 
             _currentBatchProjectName = title;
 
-            // Map AI tasks into CandidateTask instances.
+            // 将 AI 返回的小任务转换为候选任务。
+            // 此时只进入候选列表，不立即写入任务 JSON，避免把用户不想要的 AI 输出保存下来。
             foreach (var t in plan.Tasks)
             {
                 var candidate = new CandidateTask
@@ -170,6 +173,8 @@ public sealed class AiPlannerViewModel : INotifyPropertyChanged
                 : ProjectDescription[..20].Trim();
         }
 
+        // 保存时先创建一个项目父节点，再把选中的候选任务作为子任务挂到该项目下。
+        // 这样项目进度可以通过 ParentId 自动统计，不需要新增项目 JSON。
         var project = new TaskItem
         {
             Title = projectName,
@@ -187,6 +192,7 @@ public sealed class AiPlannerViewModel : INotifyPropertyChanged
 
         foreach (var c in selected)
         {
+            // 每个候选任务转换成一个真实小任务，并记录项目名、阶段和预估分钟数用于展示。
             var task = new TaskItem
             {
                 Title = c.Title,
@@ -230,6 +236,7 @@ public sealed class AiPlannerViewModel : INotifyPropertyChanged
 
     private static TaskPriority ParsePriority(string p)
     {
+        // AI 返回的是字符串，这里转换为程序内部枚举；无法识别时按普通优先级处理。
         return p?.Trim() switch
         {
             "Urgent" => TaskPriority.Urgent,

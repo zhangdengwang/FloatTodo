@@ -17,6 +17,7 @@
         MouseMove="Window_MouseMove"
         MouseLeftButtonUp="Window_MouseLeftButtonUp"
         Closing="MiniWidgetWindow_Closing">
+    <!-- 右键功能菜单：桌宠作为主要入口，常用操作从这里进入。 -->
     <Window.ContextMenu>
         <ContextMenu Opened="ContextMenu_Opened">
             <MenuItem Header="照看任务">
@@ -65,6 +66,7 @@
                       Click="ExitMenuItem_Click"/>
         </ContextMenu>
     </Window.ContextMenu>
+    <!-- 透明命中区域：背景不可见，但仍能接收鼠标事件，保证拖动和右键菜单可用。 -->
     <Grid Background="Transparent">
         <Border Background="Transparent"
                 CornerRadius="20"
@@ -73,6 +75,7 @@
                 Width="120"
                 Height="120">
             <Grid>
+                <!-- 桌宠图片区域：实际状态图片由后台根据任务状态切换。 -->
                 <TextBlock Text="FT"
                            FontSize="28"
                            FontWeight="Bold"
@@ -87,7 +90,7 @@
                        HorizontalAlignment="Center"
                        VerticalAlignment="Center"/>
 
-                <!-- Badge in top-right -->
+                <!-- 任务红点角标：只在 24 小时内截止或已逾期任务存在时显示。 -->
                 <Border x:Name="BadgeRoot"
                         Background="#D92D2D"
                         Width="32"
@@ -106,6 +109,7 @@
                                FontSize="11"/>
                 </Border>
 
+                <!-- 日常提醒文字区域，例如“请喝水”；只有提醒阈值达到时显示小气泡。 -->
                 <Border x:Name="ReminderRoot"
                         Background="#DDFFFFFF"
                         BorderBrush="#66000000"

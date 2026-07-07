@@ -4,7 +4,8 @@ using System.Text.Json.Serialization;
 namespace FloatTodo.App.Models;
 
 /// <summary>
-/// Represents the structured plan returned by the AI according to the required schema.
+/// AI 拆解接口返回的结构化项目计划。
+/// 服务层会要求模型按固定 JSON 结构返回，便于程序稳定解析为候选任务。
 /// </summary>
 public sealed class AiPlanResult
 {

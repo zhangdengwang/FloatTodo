@@ -5,6 +5,10 @@ using FloatTodo.App.ViewModels;
 
 namespace FloatTodo.App;
 
+/// <summary>
+/// 右键菜单中的“新建项目”窗口。
+/// 项目本身保存为 IsProject=true 的任务父节点，后续小任务通过 ParentId 关联到它。
+/// </summary>
 public partial class QuickAddProjectWindow : Window
 {
     public QuickAddProjectWindow()
@@ -51,6 +55,8 @@ public partial class QuickAddProjectWindow : Window
 
     private bool TryGetDueTime(out DateTime? dueTime)
     {
+        // 项目截止时间同样允许为空。
+        // 选了日期但不选小时则默认 23:59；选了小时但不选分钟则默认 00。
         dueTime = null;
         if (DueDatePicker.SelectedDate is not DateTime selectedDate)
         {
@@ -75,6 +81,7 @@ public partial class QuickAddProjectWindow : Window
 
     private void InitializeTimeSelectors()
     {
+        // 使用下拉框选择小时/分钟，降低课程演示时输入格式错误的概率。
         for (var hour = 0; hour < 24; hour++)
         {
             DueHourComboBox.Items.Add(hour.ToString("00"));
@@ -88,6 +95,7 @@ public partial class QuickAddProjectWindow : Window
 
     private static void AddTask(TaskItem task)
     {
+        // 优先写入已打开主面板的任务集合；没有主面板时仍通过 MainViewModel 保存到同一个 tasks.json。
         if (Application.Current is App app && app.GetMainViewModel() is { } mainViewModel)
         {
             mainViewModel.AddTaskItem(task);

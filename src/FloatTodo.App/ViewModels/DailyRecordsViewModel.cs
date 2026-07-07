@@ -10,7 +10,8 @@ using FloatTodo.App.Services;
 namespace FloatTodo.App.ViewModels;
 
 /// <summary>
-/// View model to manage daily routine records. Persists to JSON via DailyRecordStorageService.
+/// 日常记录 ViewModel。
+/// 负责维护记录列表、处理快捷 +1、补齐默认记录，并通过 DailyRecordStorageService 保存到 JSON。
 /// </summary>
 public sealed class DailyRecordsViewModel : INotifyPropertyChanged
 {
@@ -27,6 +28,8 @@ public sealed class DailyRecordsViewModel : INotifyPropertyChanged
         AddRecordCommand = new RelayCommand(_ => AddRecord(), _ => !string.IsNullOrWhiteSpace(NewRecordName));
         IncrementCommand = new RelayCommand(param => IncrementRecord((DailyRecordItem)param!), _ => true);
 
+        // 加载旧记录时，如果最后记录时间不是今天，则当天次数归零。
+        // 这样“今日次数”不会跨天累计。
         var needsSave = false;
         var items = _storage.Load();
         foreach (var record in items)
@@ -43,6 +46,7 @@ public sealed class DailyRecordsViewModel : INotifyPropertyChanged
         needsSave |= EnsureDefaultRecord("休息眼睛", "记录今日休息眼睛次数", "👀", 45);
         needsSave |= EnsureDefaultRecord("起身活动", "记录今日起身活动次数", "🦶", 90);
 
+        // 默认记录或旧数据阈值被补齐后，立即写回同一个 daily-records.json。
         if (needsSave)
         {
             Save();
@@ -78,6 +82,8 @@ public sealed class DailyRecordsViewModel : INotifyPropertyChanged
         string iconText,
         int? reminderThresholdMinutes = null)
     {
+        // 新增日常记录只创建记录项，不自动 +1。
+        // 这样“新增记录”和“记录一次”两个动作语义清晰。
         var trimmedName = name?.Trim() ?? string.Empty;
         if (string.IsNullOrWhiteSpace(trimmedName))
         {
@@ -106,6 +112,8 @@ public sealed class DailyRecordsViewModel : INotifyPropertyChanged
 
     public bool IncrementRecordByName(string name, string description, string iconText)
     {
+        // 右键菜单的 +1 会调用这里。
+        // 如果记录项不存在，就自动创建默认项，再更新次数和最后记录时间。
         if (string.IsNullOrWhiteSpace(name))
         {
             return false;
@@ -128,6 +136,7 @@ public sealed class DailyRecordsViewModel : INotifyPropertyChanged
             Records.Add(item);
         }
 
+        // 今天第一次记录时从 1 开始；同一天后续点击则累加。
         if (item.LastRecordTime is null || item.LastRecordTime.Value.Date != DateTime.Today)
         {
             item.TodayCount = 1;
@@ -146,6 +155,7 @@ public sealed class DailyRecordsViewModel : INotifyPropertyChanged
 
     public static int? GetDefaultReminderThresholdMinutes(string name)
     {
+        // 默认阈值集中在这里，菜单展示和自动创建记录时都能复用。
         return name switch
         {
             "喝水" => 60,
@@ -193,6 +203,7 @@ public sealed class DailyRecordsViewModel : INotifyPropertyChanged
         string iconText,
         int reminderThresholdMinutes)
     {
+        // 兼容旧数据：如果默认记录已经存在但没有提醒阈值，就补上阈值并保存。
         var record = Records.FirstOrDefault(item => string.Equals(item.Name, name, StringComparison.Ordinal));
         if (record == null)
         {

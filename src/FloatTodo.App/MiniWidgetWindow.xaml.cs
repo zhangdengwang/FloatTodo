@@ -10,12 +10,22 @@ using FloatTodo.App.Models;
 
 namespace FloatTodo.App;
 
+/// <summary>
+/// 小桌宠悬浮窗口。
+/// 负责显示桌宠图片、任务红点、日常提醒，并作为右键菜单入口。
+/// </summary>
 public partial class MiniWidgetWindow : Window
 {
+    // 通过事件把“打开完整面板”和“退出程序”交给 App 处理，避免桌宠直接控制应用生命周期。
     public event EventHandler? ToggleMainPanelRequested;
     public event EventHandler? ExitRequested;
+
+    // 快捷查看窗口使用字段保存引用，避免用户重复点击菜单时打开多个相同窗口。
     private QuickDailyRecordsWindow? _quickDailyRecordsWindow;
     private QuickProjectListWindow? _quickProjectListWindow;
+
+    // 定时刷新日常提醒和任务红点。
+    // 这样即使用户没有打开菜单，任务进入 24 小时范围时桌宠状态也能自动更新。
     private readonly DispatcherTimer _reminderTimer;
 
     public MiniWidgetWindow()
@@ -32,6 +42,7 @@ public partial class MiniWidgetWindow : Window
         };
         Loaded += (_, _) =>
         {
+            // 初始化日常记录默认项，保证喝水/休息眼睛/起身活动这些快捷入口首次运行即可使用。
             _ = new DailyRecordsViewModel();
             RefreshPetState();
             RefreshDailyReminderState();
@@ -43,6 +54,8 @@ public partial class MiniWidgetWindow : Window
     {
         base.OnMouseLeftButtonDown(e);
 
+        // 左键按下时只负责拖动窗口。
+        // 产品要求左键单击不打开主面板，主面板只通过右键菜单显式打开。
         if (e.ButtonState == MouseButtonState.Pressed)
         {
             try
@@ -69,6 +82,7 @@ public partial class MiniWidgetWindow : Window
 
     private void ClampToScreen()
     {
+        // 拖动结束后把窗口限制在工作区内，防止桌宠被拖到屏幕外找不回来。
         var workArea = SystemParameters.WorkArea;
 
         var newLeft = Left;
@@ -100,6 +114,7 @@ public partial class MiniWidgetWindow : Window
 
     private void ToggleMainWindowMenuItem_Click(object sender, RoutedEventArgs e)
     {
+        // 桌宠只发出请求，真正的主面板创建/隐藏逻辑在 App.xaml.cs 中集中处理。
         ToggleMainPanelRequested?.Invoke(this, EventArgs.Empty);
     }
 
@@ -129,6 +144,8 @@ public partial class MiniWidgetWindow : Window
 
     private void OpenTaskList(QuickTaskFilter filter)
     {
+        // 任务列表在打开窗口前一次性读取并筛选，QuickTaskListWindow 只负责展示。
+        // 这样可以避免在窗口构造或 Loaded 中做阻塞读取，降低 UI 卡死风险。
         var tasks = new TaskStorageService().Load();
         var now = DateTime.Now;
         var dueSoonLimit = now.AddHours(24);
@@ -143,6 +160,7 @@ public partial class MiniWidgetWindow : Window
 
             if (filter == QuickTaskFilter.DueSoon)
             {
+                // 快截止列表和桌宠红点使用同一规则：24 小时内截止或已经逾期的未完成非项目任务。
                 if (!IsUrgentTask(task, dueSoonLimit))
                 {
                     continue;
@@ -250,6 +268,8 @@ public partial class MiniWidgetWindow : Window
     {
         try
         {
+            // 如果完整主面板已打开，复用它的 DailyRecordsViewModel，保证界面状态和存储状态同步。
+            // 如果主面板未打开，则创建临时 ViewModel，通过同一个 DailyRecordStorageService 保存。
             DailyRecordsViewModel recordsViewModel;
             if (Application.Current is App app && app.GetMainViewModel() is { } mainViewModel)
             {
@@ -278,9 +298,14 @@ public partial class MiniWidgetWindow : Window
 
     private void ContextMenu_Opened(object sender, RoutedEventArgs e)
     {
+        // 右键菜单每次打开时刷新次数和上次记录时间，避免菜单文字停留在旧状态。
         RefreshDailyRecordMenuHeaders();
     }
 
+    /// <summary>
+    /// 刷新日常记录二级菜单的显示文字。
+    /// 菜单项展示当天次数、上次记录时间和提醒阈值，让用户不用打开窗口也能看到状态。
+    /// </summary>
     private void RefreshDailyRecordMenuHeaders()
     {
         try
@@ -301,6 +326,7 @@ public partial class MiniWidgetWindow : Window
 
     private static string BuildDailyRecordMenuHeader(string name, IEnumerable<DailyRecordItem> records)
     {
+        // 次数按“今天”统计：如果最后记录不是今天，菜单中显示 0，符合日常打卡的直觉。
         var record = records.FirstOrDefault(r => string.Equals(r.Name, name, StringComparison.Ordinal));
         var count = record?.LastRecordTime?.Date == DateTime.Today ? record.TodayCount : 0;
         var lastRecordTime = record?.LastRecordTime?.ToString("HH:mm") ?? "未记录";
@@ -312,6 +338,8 @@ public partial class MiniWidgetWindow : Window
 
     private static bool IsUrgentTask(TaskItem task, DateTime dueSoonLimit)
     {
+        // 项目父节点只用于组织小任务，不应计入桌宠红点。
+        // 红点只统计 24 小时内截止或已经逾期的普通任务 / 项目小任务。
         return !task.IsProject &&
                task.Status != FloatTodo.App.Models.TaskStatus.Done &&
                task.DueTime.HasValue &&
@@ -320,6 +348,8 @@ public partial class MiniWidgetWindow : Window
 
     private static List<DailyRecordItem> GetDailyRecordsSnapshot()
     {
+        // 优先从已打开的主面板 ViewModel 取数据；没有主面板时从 JSON 读取快照。
+        // 这样既能保持界面同步，也不会因为没打开主面板而无法使用桌宠菜单。
         return Application.Current is App app && app.GetMainViewModel() is { } mainViewModel
             ? mainViewModel.DailyRecords.Records.ToList()
             : new DailyRecordStorageService().Load();
@@ -329,6 +359,8 @@ public partial class MiniWidgetWindow : Window
     {
         try
         {
+            // 日常提醒不是弹窗，而是桌宠旁边的一小段状态文字。
+            // 选择最早达到提醒阈值的记录项显示，避免同时出现多条提示挤占桌宠区域。
             var records = GetDailyRecordsSnapshot();
             var now = DateTime.Now;
             DailyRecordItem? earliestReminder = null;
@@ -372,6 +404,7 @@ public partial class MiniWidgetWindow : Window
 
     private void OpenQuickAddTaskWindow_Click(object sender, RoutedEventArgs e)
     {
+        // 快速新增任务完成后立即刷新桌宠，保证红点和三状态图片及时变化。
         var quickAdd = new QuickAddTaskWindow();
         quickAdd.Owner = this;
         quickAdd.ShowDialog();
@@ -403,19 +436,27 @@ public partial class MiniWidgetWindow : Window
 
     private void ExitMenuItem_Click(object sender, RoutedEventArgs e)
     {
+        // 退出统一交给 App 处理，配合 OnExplicitShutdown 保证应用真正结束。
         ExitRequested?.Invoke(this, EventArgs.Empty);
     }
 
     private void MiniWidgetWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
     {
+        // 关闭桌宠意味着用户明确退出应用，停止定时器后关闭整个 WPF 程序。
         _reminderTimer.Stop();
         Application.Current.Shutdown();
     }
 
+    /// <summary>
+    /// 刷新桌宠任务状态。
+    /// 根据未完成任务和 24 小时内截止/逾期任务数量，切换三状态图片并决定是否显示红点。
+    /// </summary>
     public void RefreshPetState()
     {
         try
         {
+            // 如果完整主面板已打开，优先使用内存中的任务集合；否则直接从 JSON 读取。
+            // 这样桌宠不依赖主面板，也能在默认悬浮入口模式下正常显示任务状态。
             MainViewModel? mainVm = null;
             if (Application.Current is App app)
             {
@@ -431,11 +472,14 @@ public partial class MiniWidgetWindow : Window
                 tasks = storage.Load();
             }
 
+            // 三状态图片中的“有无任务”看所有未完成非项目任务。
             var unfinished = tasks.Count(t =>
                 !t.IsProject &&
                 t.Status != FloatTodo.App.Models.TaskStatus.Done);
             var now = DateTime.Now;
             var dueSoonLimit = now.AddHours(24);
+
+            // 红点数字只看紧急任务，不再显示普通未完成任务数量。
             var dueSoon = tasks.Count(t => IsUrgentTask(t, dueSoonLimit));
 
             if (unfinished == 0)

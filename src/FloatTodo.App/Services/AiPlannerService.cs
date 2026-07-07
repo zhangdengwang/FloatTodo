@@ -11,8 +11,8 @@ using FloatTodo.App.Models;
 namespace FloatTodo.App.Services;
 
 /// <summary>
-/// AI planner service that calls DeepSeek using the configured API settings.
-/// It prefers locally saved settings and falls back to environment variable when needed.
+/// AI 项目拆解服务。
+/// 负责读取 DeepSeek 配置、发送项目描述、解析模型返回的 JSON，并把结果转换为内部计划对象。
 /// </summary>
 public sealed class AiPlannerService
 {
@@ -28,6 +28,8 @@ public sealed class AiPlannerService
         if (string.IsNullOrWhiteSpace(projectDescription))
             throw new ArgumentException("请先输入项目描述。", nameof(projectDescription));
 
+        // API Key 既可以来自本地设置，也可以来自环境变量。
+        // 这样课程提交代码时不需要把个人密钥写进仓库。
         var settings = _settingsService.Load();
         var apiKey = GetApiKey(settings);
         if (string.IsNullOrWhiteSpace(apiKey))
@@ -40,9 +42,11 @@ public sealed class AiPlannerService
         http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
         http.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
+        // systemPrompt 明确要求模型只做“项目拆解助手”，降低返回闲聊文本的概率。
         var systemPrompt =
             "你是一个项目任务拆解助手。用户会输入一个项目、作业或任务目标。请严格按照指定的 JSON 模式返回，不要输出多余文字或 Markdown。";
 
+        // userPrompt 中给出固定 JSON 模板，后续才能稳定反序列化成 AiPlanResult。
         var userPrompt = new StringBuilder();
         userPrompt.AppendLine("请把下列项目拆解成 6 到 12 个可执行小任务。每个任务必须具体且可执行。输出必须是合法 JSON，且遵守下列结构：");
         userPrompt.AppendLine("{\n  \"project_title\": \"...\",\n  \"project_summary\": \"...\",\n  \"tasks\": [ { \"title\": \"...\", \"description\": \"...\", \"phase\": \"规划|设计|实现|测试|文档|展示|其他\", \"priority\": \"Urgent|Important|Normal\", \"estimated_minutes\": 60, \"suggested_order\": 1 } ],\n  \"risks\": [ \"...\" ]\n}");
@@ -52,6 +56,8 @@ public sealed class AiPlannerService
         userPrompt.AppendLine("用户输入：");
         userPrompt.AppendLine(projectDescription);
 
+        // DeepSeek chat/completions 接口的请求体：模型名、消息数组和较低 temperature。
+        // temperature 设为 0 是为了让任务拆解结果更稳定，便于演示和解析。
         var payload = new
         {
             model = settings.Model,
@@ -96,10 +102,12 @@ public sealed class AiPlannerService
             if (choices.GetArrayLength() == 0)
                 throw new Exception("AI 返回内容为空。");
 
+            // DeepSeek 返回的真正文本在 choices[0].message.content 中。
             var message = choices[0].GetProperty("message").GetProperty("content").GetString();
             if (string.IsNullOrWhiteSpace(message))
                 throw new Exception("AI 返回内容为空。");
 
+            // 有些模型会额外包一层 ```json 代码块，这里先清理再解析。
             message = CleanAiResponseContent(message);
             if (string.IsNullOrWhiteSpace(message))
                 throw new Exception("AI 返回内容为空。请检查模型输出。\n");
@@ -123,7 +131,7 @@ public sealed class AiPlannerService
         if (string.IsNullOrEmpty(content))
             return string.Empty;
 
-        // Remove markdown code fences and any leading language hint.
+        // 去掉 Markdown 代码块和 json 语言标记，提升对模型输出格式波动的容错。
         if (content.StartsWith("```"))
         {
             var endFence = content.LastIndexOf("```");
@@ -154,6 +162,7 @@ public sealed class AiPlannerService
 
     private static string? GetApiKey(ApiSettings settings)
     {
+        // 本地配置优先；环境变量作为兜底，便于不落盘地提供密钥。
         if (!string.IsNullOrWhiteSpace(settings.ApiKey))
             return settings.ApiKey.Trim();
 
@@ -163,6 +172,7 @@ public sealed class AiPlannerService
 
     private static void ConfigureProxy(HttpClientHandler handler)
     {
+        // 支持常见代理环境变量，方便校园网、公司网或本机代理场景下测试 AI。
         var proxyUrl = Environment.GetEnvironmentVariable("HTTPS_PROXY") ?? Environment.GetEnvironmentVariable("HTTP_PROXY");
         if (string.IsNullOrWhiteSpace(proxyUrl))
             return;

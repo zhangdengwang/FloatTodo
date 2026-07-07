@@ -15,7 +15,8 @@ using FloatTodo.App.Services;
 namespace FloatTodo.App.ViewModels;
 
 /// <summary>
-/// ViewModel for DeepSeek API settings management.
+/// DeepSeek API 设置 ViewModel。
+/// 负责 API Key 的本地读取/保存、遮罩显示和连接测试。
 /// </summary>
 public sealed class ApiSettingsViewModel : INotifyPropertyChanged
 {
@@ -114,6 +115,8 @@ public sealed class ApiSettingsViewModel : INotifyPropertyChanged
 
     public void Save()
     {
+        // API Key 保存到本地 data/local-settings.json。
+        // 该文件属于私人配置，已通过 .gitignore 和打包脚本排除，不应提交到仓库或发布包。
         var settings = new ApiSettings
         {
             Provider = Provider,
@@ -139,6 +142,8 @@ public sealed class ApiSettingsViewModel : INotifyPropertyChanged
 
         try
         {
+            // 连接测试直接请求 DeepSeek chat/completions。
+            // 请求内容很短，只用于验证 Key、网络和代理配置是否可用。
             using var handler = new HttpClientHandler();
             ConfigureProxy(handler);
             using var client = new HttpClient(handler);
@@ -196,6 +201,7 @@ public sealed class ApiSettingsViewModel : INotifyPropertyChanged
 
     private static string MaskKey(string key)
     {
+        // 默认只显示前后少量字符，避免答辩演示或截图时泄露完整 API Key。
         if (string.IsNullOrWhiteSpace(key))
             return string.Empty;
 
@@ -207,6 +213,7 @@ public sealed class ApiSettingsViewModel : INotifyPropertyChanged
 
     private static void ConfigureProxy(HttpClientHandler handler)
     {
+        // 支持 HTTP_PROXY / HTTPS_PROXY，便于需要代理访问外网 API 的环境。
         var proxyUrl = Environment.GetEnvironmentVariable("HTTPS_PROXY") ?? Environment.GetEnvironmentVariable("HTTP_PROXY");
         if (string.IsNullOrWhiteSpace(proxyUrl))
             return;

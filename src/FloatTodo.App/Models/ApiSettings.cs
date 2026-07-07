@@ -4,7 +4,8 @@ using System.Text.Json.Serialization;
 namespace FloatTodo.App.Models;
 
 /// <summary>
-/// Represents local API settings for DeepSeek integration.
+/// DeepSeek API 本地配置。
+/// API Key 属于个人密钥，只保存在本地配置文件或环境变量中，不应该提交到 Git。
 /// </summary>
 public sealed class ApiSettings
 {

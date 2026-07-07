@@ -4,7 +4,8 @@ using System.Runtime.CompilerServices;
 namespace FloatTodo.App.Models;
 
 /// <summary>
-/// Represents a candidate task produced by the AI planner.
+/// AI 拆解后生成的候选任务。
+/// 候选任务先存在内存中，等用户勾选确认后才会真正写入任务列表，避免 AI 输出直接污染待办数据。
 /// </summary>
 public sealed class CandidateTask : INotifyPropertyChanged
 {

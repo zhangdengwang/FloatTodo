@@ -6,10 +6,12 @@ using FloatTodo.App.Models;
 namespace FloatTodo.App.Services;
 
 /// <summary>
-/// Reads and writes local API settings for DeepSeek integration.
+/// DeepSeek API 设置读写服务。
+/// API Key 优先从本地配置读取，也支持环境变量，便于开发机和演示机使用不同密钥。
 /// </summary>
 public sealed class ApiSettingsService
 {
+    // 本地配置文件属于私人数据，已经在 .gitignore 和打包脚本中排除。
     private const string SettingsPath = "data/local-settings.json";
 
     public ApiSettings Load()
@@ -27,6 +29,8 @@ public sealed class ApiSettingsService
                 }
             }
 
+            // 如果本地配置不存在，尝试读取环境变量。
+            // 这种方式适合不想把 Key 写入项目目录的用户。
             var envKey = Environment.GetEnvironmentVariable("DEEPSEEK_API_KEY");
             if (!string.IsNullOrWhiteSpace(envKey))
             {
@@ -39,7 +43,7 @@ public sealed class ApiSettingsService
         }
         catch
         {
-            // Swallow errors to keep app running with default settings.
+            // 设置读取失败不应影响普通任务、日常记录等离线功能。
         }
 
         return new ApiSettings();
@@ -59,7 +63,7 @@ public sealed class ApiSettingsService
         }
         catch
         {
-            // Fail silently; caller may display a message.
+            // 保存失败时不抛出到全局，调用方可以通过状态文字或消息框提示用户。
         }
     }
 }

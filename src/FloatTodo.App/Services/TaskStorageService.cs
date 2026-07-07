@@ -9,7 +9,8 @@ using FloatTodo.App.Models;
 namespace FloatTodo.App.Services;
 
 /// <summary>
-/// Provides simple JSON file persistence for TaskItem objects.
+/// 任务本地存储服务。
+/// 所有普通任务、项目父节点和项目小任务都保存到同一个 tasks.json，避免出现多套任务数据源。
 /// </summary>
 public sealed class TaskStorageService
 {
@@ -18,7 +19,8 @@ public sealed class TaskStorageService
 
     public TaskStorageService(string? basePath = null)
     {
-        // Default to application base directory so the data folder is next to the app.
+        // 默认把 data 目录放在程序运行目录旁边。
+        // 这样源码运行和发布包运行都能用同一套“应用目录/data/tasks.json”规则。
         var root = basePath ?? AppContext.BaseDirectory;
         var dataDir = Path.Combine(root, "data");
         if (!Directory.Exists(dataDir))
@@ -36,7 +38,8 @@ public sealed class TaskStorageService
     }
 
     /// <summary>
-    /// Loads tasks from the JSON file. Returns empty list on any error.
+    /// 从 JSON 文件读取任务列表。
+    /// 如果文件不存在、为空或解析失败，返回空列表，避免桌宠启动时因为本地数据损坏而崩溃。
     /// </summary>
     public List<TaskItem> Load()
     {
@@ -53,6 +56,8 @@ public sealed class TaskStorageService
                 return new List<TaskItem>();
             }
 
+            // 早期版本的任务数据可能没有 Id。
+            // 项目/小任务关系依赖 Id，因此加载时检测并补齐，再尽量写回文件完成兼容升级。
             var requiresIdUpgrade = ContainsTaskWithoutId(json);
             var items = JsonSerializer.Deserialize<List<TaskItem>>(json, _jsonOptions);
             var result = items ?? new List<TaskItem>();
@@ -85,11 +90,12 @@ public sealed class TaskStorageService
     }
 
     /// <summary>
-    /// Saves tasks to the JSON file. Exceptions are propagated to caller.
+    /// 将任务列表保存到 JSON 文件。
+    /// 保存异常交给调用方决定是否提示用户，因为不同入口的交互方式不同。
     /// </summary>
     public void Save(IEnumerable<TaskItem> tasks)
     {
-        // Ensure folder exists (defensive)
+        // 保存前再次确保目录存在，防止用户删除 data 目录后写入失败。
         var dir = Path.GetDirectoryName(_dataFilePath);
         if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
         {
@@ -103,6 +109,8 @@ public sealed class TaskStorageService
 
     private static bool ContainsTaskWithoutId(string json)
     {
+        // 这里直接检查原始 JSON 属性，而不是先反序列化。
+        // 这样可以判断“旧数据缺少 Id”和“Id 值为空”这两种不同场景。
         using var document = JsonDocument.Parse(json);
         if (document.RootElement.ValueKind != JsonValueKind.Array)
         {
