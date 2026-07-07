@@ -4,7 +4,8 @@ using System.Windows.Controls;
 namespace FloatTodo.App.Views;
 
 /// <summary>
-/// Code-behind for the main shell user control.
+/// 完整主面板的后台代码。
+/// 这里仅处理少量与控件直接相关的事件，主要业务仍由 MainViewModel 承担。
 /// </summary>
 public partial class ShellView : UserControl
 {
@@ -22,5 +23,14 @@ public partial class ShellView : UserControl
         {
             viewModel.AiSettings.ApiKey = pb.Password;
         }
+    }
+
+    /// <summary>
+    /// 主面板中的退出入口。
+    /// 点击后退出整个 FloatTodo 程序，而不是只关闭或隐藏完整主面板。
+    /// </summary>
+    private void ExitApplicationButton_Click(object sender, RoutedEventArgs e)
+    {
+        Application.Current.Shutdown();
     }
 }

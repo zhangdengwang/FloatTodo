@@ -57,7 +57,7 @@
                 <MenuItem Header="API Key 设置..."
                           Click="OpenApiSettings_Click"/>
                 <MenuItem Header="关于 FloatTodo"
-                          Click="OnPlaceholderMenuItemClick"/>
+                          Click="ShowAbout_Click"/>
             </MenuItem>
             <Separator/>
             <MenuItem Header="打开完整面板"

@@ -19,16 +19,28 @@
             BorderThickness="1">
         <ScrollViewer VerticalScrollBarVisibility="Auto">
             <StackPanel Margin="16">
-                <StackPanel Margin="0,0,0,12">
-                    <TextBlock Text="FloatTodo"
-                               FontSize="22"
-                               FontWeight="SemiBold"
-                               Foreground="#2F2F2F"/>
-                    <TextBlock Text="今日任务"
-                               FontSize="14"
-                               Foreground="#6F6F6F"
-                               Margin="0,4,0,0"/>
-                </StackPanel>
+                <!-- 主面板顶部操作区：退出按钮会关闭整个应用，而不是只隐藏主面板。 -->
+                <Grid Margin="0,0,0,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="FloatTodo"
+                                   FontSize="22"
+                                   FontWeight="SemiBold"
+                                   Foreground="#2F2F2F"/>
+                        <TextBlock Text="今日任务"
+                                   FontSize="14"
+                                   Foreground="#6F6F6F"
+                                   Margin="0,4,0,0"/>
+                    </StackPanel>
+                    <Button Grid.Column="1"
+                            Content="退出程序"
+                            Padding="10,6"
+                            VerticalAlignment="Top"
+                            Click="ExitApplicationButton_Click"/>
+                </Grid>
 
                 <!-- 日常记录区域 -->
                 <Border Margin="0,0,0,12"

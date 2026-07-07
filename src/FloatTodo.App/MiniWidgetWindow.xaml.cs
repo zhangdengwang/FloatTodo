@@ -421,6 +421,33 @@ public partial class MiniWidgetWindow : Window
     }
 
     /// <summary>
+    /// 显示项目关于信息。
+    /// 关于入口只展示静态说明，不访问网络和本地存储，因此不会阻塞桌宠菜单。
+    /// </summary>
+    private void ShowAbout_Click(object sender, RoutedEventArgs e)
+    {
+        const string aboutText =
+            "FloatTodo\n\n" +
+            "AI 项目拆解与桌宠化悬浮待办工具\n\n" +
+            "主要功能：\n" +
+            "- 桌宠悬浮入口\n" +
+            "- 右键多级菜单\n" +
+            "- 普通任务与项目任务管理\n" +
+            "- AI 项目拆解\n" +
+            "- 日常记录与阈值提醒\n" +
+            "- 24 小时内截止任务红点提醒\n" +
+            "- 本地 JSON 数据保存\n" +
+            "- Windows 自包含发布\n\n" +
+            "操作说明：\n" +
+            "- 左键按住桌宠可拖动\n" +
+            "- 右键桌宠打开功能菜单\n" +
+            "- AI 拆解需要配置 DeepSeek API Key 和网络\n" +
+            "- 普通任务、项目、日常记录不需要 API Key";
+
+        MessageBox.Show(this, aboutText, "关于 FloatTodo", MessageBoxButton.OK, MessageBoxImage.Information);
+    }
+
+    /// <summary>
     /// 打开轻量 API 设置窗口。
     /// API Key 设置属于右键菜单的常用配置入口，不需要先打开完整主面板。
     /// </summary>
