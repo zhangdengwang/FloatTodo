@@ -60,8 +60,6 @@
                           Click="ShowAbout_Click"/>
             </MenuItem>
             <Separator/>
-            <MenuItem Header="打开完整面板"
-                      Click="ToggleMainWindowMenuItem_Click"/>
             <MenuItem Header="退出"
                       Click="ExitMenuItem_Click"/>
         </ContextMenu>

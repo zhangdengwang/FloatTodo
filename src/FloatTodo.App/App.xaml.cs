@@ -25,8 +25,8 @@ public partial class App : Application
 
         _miniWidgetWindow = new MiniWidgetWindow();
 
-        // 桌宠不直接持有主面板创建细节，只通过事件告诉 App：
-        // “用户想打开/隐藏完整面板”或“用户想退出程序”。
+        // 完整主面板当前作为备用展示和调试界面保留，普通用户主要通过桌宠右键菜单和快捷窗口操作。
+        // 桌宠不直接持有主面板创建细节；如果隐藏入口触发事件，仍由 App 统一创建/隐藏主面板。
         _miniWidgetWindow.ToggleMainPanelRequested += (_, _) => ToggleMainPanel();
         _miniWidgetWindow.ExitRequested += (_, _) => Shutdown();
 
@@ -36,8 +36,9 @@ public partial class App : Application
     }
 
     /// <summary>
-    /// 打开或隐藏完整主面板。
-    /// 主面板只在第一次使用时创建，关闭后释放引用，下一次再按需重建。
+    /// 打开或隐藏备用完整主面板。
+    /// 主面板不再作为普通用户入口，但保留为调试面板、备用展示界面和答辩兜底界面。
+    /// 它只在第一次使用时创建，关闭后释放引用，下一次再按需重建。
     /// </summary>
     private void ToggleMainPanel()
     {

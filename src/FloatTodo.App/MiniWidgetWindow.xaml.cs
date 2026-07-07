@@ -16,7 +16,8 @@ namespace FloatTodo.App;
 /// </summary>
 public partial class MiniWidgetWindow : Window
 {
-    // 通过事件把“打开完整面板”和“退出程序”交给 App 处理，避免桌宠直接控制应用生命周期。
+    // 完整主面板作为备用展示和调试界面保留；普通用户主要通过桌宠右键菜单和快捷窗口操作。
+    // 如果后续需要临时打开完整面板，仍可复用该事件把请求交给 App 处理。
     public event EventHandler? ToggleMainPanelRequested;
     public event EventHandler? ExitRequested;
 
@@ -114,7 +115,8 @@ public partial class MiniWidgetWindow : Window
 
     private void ToggleMainWindowMenuItem_Click(object sender, RoutedEventArgs e)
     {
-        // 桌宠只发出请求，真正的主面板创建/隐藏逻辑在 App.xaml.cs 中集中处理。
+        // 备用完整面板入口：当前普通右键菜单不再显示该入口。
+        // 保留方法是为了调试、答辩兜底或后续隐藏入口复用。
         ToggleMainPanelRequested?.Invoke(this, EventArgs.Empty);
     }
 
