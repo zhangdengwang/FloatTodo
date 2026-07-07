@@ -46,14 +46,14 @@ public sealed class AiPlannerService
         var systemPrompt =
             "你是一个项目任务拆解助手。用户会输入一个项目、作业或任务目标。请严格按照指定的 JSON 模式返回，不要输出多余文字或 Markdown。";
 
-        // userPrompt 中给出固定 JSON 模板，要求每个小任务包含 description。
-        // 这样 AI 生成的项目小任务不仅有标题，也能保存到 TaskItem.Description 供详情窗口展示。
+        // userPrompt 中给出固定 JSON 模板，要求每个小任务包含 description 和可选 dueTime。
+        // dueTime 会保存到项目小任务 DueTime，并复用现有红点与截止提醒规则。
         var userPrompt = new StringBuilder();
         userPrompt.AppendLine("请把下列项目拆解成 6 到 12 个可执行小任务。每个任务必须具体且可执行。输出必须是合法 JSON，且遵守下列结构：");
-        userPrompt.AppendLine("{\n  \"project_title\": \"...\",\n  \"project_summary\": \"...\",\n  \"tasks\": [ { \"title\": \"...\", \"description\": \"写清楚该小任务的具体步骤、验收标准或注意事项\", \"phase\": \"规划|设计|实现|测试|文档|展示|其他\", \"priority\": \"Urgent|Important|Normal\", \"estimated_minutes\": 60, \"suggested_order\": 1, \"dueTime\": null } ],\n  \"risks\": [ \"...\" ]\n}");
+        userPrompt.AppendLine("{\n  \"project_title\": \"...\",\n  \"project_summary\": \"...\",\n  \"tasks\": [ { \"title\": \"...\", \"description\": \"写清楚该小任务的具体步骤、验收标准或注意事项\", \"phase\": \"规划|设计|实现|测试|文档|展示|其他\", \"priority\": \"Urgent|Important|Normal\", \"estimated_minutes\": 60, \"suggested_order\": 1, \"dueTime\": \"2026-07-08 23:59\" } ],\n  \"risks\": [ \"...\" ]\n}");
         userPrompt.AppendLine();
         userPrompt.AppendLine("约束：");
-        userPrompt.AppendLine("1) 不要输出 Markdown 或解释性文本，2) 只输出 JSON，3) 每个任务必须包含非空 description，4) priority 只能为 Urgent、Important 或 Normal，5) estimated_minutes 必须是整数，6) phase 必须从 规划, 设计, 实现, 测试, 文档, 展示, 其他 中选择，7) suggested_order 从 1 开始递增。\n");
+        userPrompt.AppendLine("1) 不要输出 Markdown 或解释性文本，2) 只输出 JSON，3) 每个任务必须包含非空 description，4) priority 只能为 Urgent、Important 或 Normal，5) estimated_minutes 必须是整数，6) phase 必须从 规划, 设计, 实现, 测试, 文档, 展示, 其他 中选择，7) suggested_order 从 1 开始递增，8) 请为每个任务尽量给出合理 dueTime，格式必须是 yyyy-MM-dd HH:mm；如果用户描述中有时间安排，请尽量按描述分配；如果确实无法判断，可以返回 null。\n");
         userPrompt.AppendLine("用户输入：");
         userPrompt.AppendLine(projectDescription);
 

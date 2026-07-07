@@ -14,6 +14,8 @@ public partial class QuickAddProjectWindow : Window
     public QuickAddProjectWindow()
     {
         InitializeComponent();
+        // 项目默认选择今天作为截止日期，演示和日常使用时少点一步；清空后仍按无截止时间保存。
+        DueDatePicker.SelectedDate = DateTime.Today;
         InitializeTimeSelectors();
     }
 
@@ -77,6 +79,13 @@ public partial class QuickAddProjectWindow : Window
         }
 
         return true;
+    }
+
+    private void ClearDueTimeButton_Click(object sender, RoutedEventArgs e)
+    {
+        DueDatePicker.SelectedDate = null;
+        DueHourComboBox.SelectedItem = null;
+        DueMinuteComboBox.SelectedItem = null;
     }
 
     private void InitializeTimeSelectors()

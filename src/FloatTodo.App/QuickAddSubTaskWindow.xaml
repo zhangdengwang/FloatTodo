@@ -56,10 +56,17 @@
         <TextBlock Grid.Row="3"
                    Text="截止日期"
                    VerticalAlignment="Center"/>
-        <DatePicker x:Name="DueDatePicker"
-                    Grid.Row="3"
+        <StackPanel Grid.Row="3"
                     Grid.Column="1"
-                    Margin="0,4"/>
+                    Orientation="Horizontal"
+                    Margin="0,4">
+            <DatePicker x:Name="DueDatePicker"
+                        Width="190"/>
+            <Button Content="清空截止"
+                    Width="86"
+                    Margin="8,0,0,0"
+                    Click="ClearDueTimeButton_Click"/>
+        </StackPanel>
 
         <TextBlock Grid.Row="4"
                    Text="截止时间"

@@ -14,6 +14,8 @@ public partial class QuickAddTaskWindow : Window
     public QuickAddTaskWindow()
     {
         InitializeComponent();
+        // 默认选择今天，减少快速添加任务时重复点日期的成本；用户可用“清空截止”保存为无截止时间。
+        DueDatePicker.SelectedDate = DateTime.Today;
         InitializeTimeSelectors();
     }
 
@@ -88,6 +90,13 @@ public partial class QuickAddTaskWindow : Window
         var backupViewModel = new MainViewModel();
         backupViewModel.AddTaskItem(task);
         Close();
+    }
+
+    private void ClearDueTimeButton_Click(object sender, RoutedEventArgs e)
+    {
+        DueDatePicker.SelectedDate = null;
+        DueHourComboBox.SelectedItem = null;
+        DueMinuteComboBox.SelectedItem = null;
     }
 
     private void InitializeTimeSelectors()

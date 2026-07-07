@@ -113,7 +113,7 @@ public sealed class AiPlannerViewModel : INotifyPropertyChanged
             _currentBatchProjectName = title;
 
             // 将 AI 返回的小任务转换为候选任务。
-            // 此时只进入候选列表，不立即写入任务 JSON，避免把用户不想要的 AI 输出保存下来。
+            // 此时只进入候选列表，不立即写入任务 JSON；AI 建议截止时间会先展示，用户确认后再保存到小任务 DueTime。
             foreach (var t in plan.Tasks)
             {
                 var description = string.IsNullOrWhiteSpace(t.Description)
@@ -196,7 +196,7 @@ public sealed class AiPlannerViewModel : INotifyPropertyChanged
 
         foreach (var c in selected)
         {
-            // 每个候选任务转换成一个真实小任务，并记录项目名、阶段和预估分钟数用于展示。
+            // 每个候选任务转换成一个真实小任务，并记录项目名、阶段、预估分钟数和 AI 建议截止时间用于展示与提醒。
             var task = new TaskItem
             {
                 Title = c.Title,

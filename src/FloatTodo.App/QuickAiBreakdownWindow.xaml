@@ -82,8 +82,8 @@
                                 <TextBlock>
                                     <Run Text="优先级: "/>
                                     <Run Text="{Binding Priority}"/>
-                                    <Run Text="  |  截止: "/>
-                                    <Run Text="无截止时间"/>
+                                    <Run Text="  |  建议截止: "/>
+                                    <Run Text="{Binding DueTimeDisplay, Mode=OneWay}"/>
                                 </TextBlock>
                             </StackPanel>
                         </StackPanel>

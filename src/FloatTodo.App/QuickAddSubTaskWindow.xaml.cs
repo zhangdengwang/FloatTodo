@@ -18,6 +18,8 @@ public partial class QuickAddSubTaskWindow : Window
     {
         _project = project ?? throw new ArgumentNullException(nameof(project));
         InitializeComponent();
+        // 新增小任务默认选择今天，便于快速设置当天待办；清空后仍保存为无截止时间。
+        DueDatePicker.SelectedDate = DateTime.Today;
         InitializeTimeSelectors();
         Title = $"新增小任务 - {_project.Title}";
     }
@@ -90,6 +92,13 @@ public partial class QuickAddSubTaskWindow : Window
         }
 
         return true;
+    }
+
+    private void ClearDueTimeButton_Click(object sender, RoutedEventArgs e)
+    {
+        DueDatePicker.SelectedDate = null;
+        DueHourComboBox.SelectedItem = null;
+        DueMinuteComboBox.SelectedItem = null;
     }
 
     private void InitializeTimeSelectors()

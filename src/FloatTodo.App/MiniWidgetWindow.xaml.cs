@@ -1,7 +1,9 @@
 using System;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Input;
 using System.Linq;
+using System.Windows.Interop;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using FloatTodo.App.ViewModels;
@@ -16,6 +18,18 @@ namespace FloatTodo.App;
 /// </summary>
 public partial class MiniWidgetWindow : Window
 {
+    private const int HotkeyIdToggleWidget = 0x4644;
+    private const int WmHotkey = 0x0312;
+    private const uint ModAlt = 0x0001;
+    private const uint ModControl = 0x0002;
+    private const uint VirtualKeyOemQuestion = 0xBF;
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, uint vk);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
+
     // 完整主面板作为备用展示和调试界面保留；普通用户主要通过桌宠右键菜单和快捷窗口操作。
     // 如果后续需要临时打开完整面板，仍可复用该事件把请求交给 App 处理。
     public event EventHandler? ToggleMainPanelRequested;
@@ -28,6 +42,9 @@ public partial class MiniWidgetWindow : Window
     // 定时刷新日常提醒和任务红点。
     // 这样即使用户没有打开菜单，任务进入 24 小时范围时桌宠状态也能自动更新。
     private readonly DispatcherTimer _reminderTimer;
+    private HwndSource? _hotkeySource;
+    private bool _hotkeyRegistered;
+    private bool _hotkeyRegistrationWarningShown;
 
     // 当前正在提醒文字区域显示的日常记录项名称。
     // 双击提醒气泡时只给这一项 +1，避免误操作其他日常记录。
@@ -57,6 +74,59 @@ public partial class MiniWidgetWindow : Window
             RefreshDailyReminderState();
             _reminderTimer.Start();
         };
+        SourceInitialized += MiniWidgetWindow_SourceInitialized;
+    }
+
+    /// <summary>
+    /// 注册 Ctrl+Alt+/ 全局快捷键。
+    /// 使用 Win32 全局快捷键是为了在桌宠窗口 Hide() 之后仍能收到唤醒消息。
+    /// </summary>
+    private void MiniWidgetWindow_SourceInitialized(object? sender, EventArgs e)
+    {
+        var handle = new WindowInteropHelper(this).Handle;
+        _hotkeySource = HwndSource.FromHwnd(handle);
+        _hotkeySource?.AddHook(WndProc);
+
+        _hotkeyRegistered = RegisterHotKey(handle, HotkeyIdToggleWidget, ModControl | ModAlt, VirtualKeyOemQuestion);
+        if (!_hotkeyRegistered && !_hotkeyRegistrationWarningShown)
+        {
+            _hotkeyRegistrationWarningShown = true;
+            MessageBox.Show(this,
+                "快捷键 Ctrl+Alt+/ 注册失败，可能已被其他程序占用。",
+                "FloatTodo",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
+    }
+
+    private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+    {
+        if (msg == WmHotkey && wParam.ToInt32() == HotkeyIdToggleWidget)
+        {
+            ToggleWidgetVisibilityByHotkey();
+            handled = true;
+        }
+
+        return IntPtr.Zero;
+    }
+
+    /// <summary>
+    /// 只切换小桌宠悬浮窗显示状态，不退出程序，也不打开完整主面板。
+    /// 唤醒时顺手刷新任务红点、日常提醒和截止任务提醒，保证隐藏期间变化能立刻显示。
+    /// </summary>
+    private void ToggleWidgetVisibilityByHotkey()
+    {
+        if (IsVisible)
+        {
+            Hide();
+            return;
+        }
+
+        Show();
+        WindowState = WindowState.Normal;
+        Topmost = true;
+        RefreshPetState();
+        RefreshDailyReminderState();
     }
 
     protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
@@ -624,6 +694,7 @@ public partial class MiniWidgetWindow : Window
             "操作说明：\n" +
             "- 左键按住桌宠可拖动\n" +
             "- 右键桌宠打开功能菜单\n" +
+            "- Ctrl + Alt + /：隐藏 / 唤醒悬浮窗\n" +
             "- AI 拆解需要配置 DeepSeek API Key 和网络\n" +
             "- 普通任务、项目、日常记录不需要 API Key";
 
@@ -667,7 +738,21 @@ public partial class MiniWidgetWindow : Window
     {
         // 关闭桌宠意味着用户明确退出应用，停止定时器后关闭整个 WPF 程序。
         _reminderTimer.Stop();
+        UnregisterGlobalHotkey();
         Application.Current.Shutdown();
+    }
+
+    private void UnregisterGlobalHotkey()
+    {
+        var handle = new WindowInteropHelper(this).Handle;
+        if (_hotkeyRegistered && handle != IntPtr.Zero)
+        {
+            UnregisterHotKey(handle, HotkeyIdToggleWidget);
+            _hotkeyRegistered = false;
+        }
+
+        _hotkeySource?.RemoveHook(WndProc);
+        _hotkeySource = null;
     }
 
     /// <summary>

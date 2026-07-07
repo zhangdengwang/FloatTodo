@@ -20,6 +20,11 @@ public sealed class CandidateTask : INotifyPropertyChanged
     public int SuggestedOrder { get; set; }
     public DateTime? DueTime { get; set; }
 
+    // AI 建议截止时间保存到候选任务中，加入项目小任务时会写入 TaskItem.DueTime 并复用红点/截止提醒规则。
+    public string DueTimeDisplay => DueTime.HasValue
+        ? DueTime.Value.ToString("yyyy-MM-dd HH:mm")
+        : "无";
+
     /// <summary>
     /// Whether the user has checked this candidate for adding to the todo list.
     /// </summary>
