@@ -50,12 +50,12 @@
                           Click="StandUpMenuItem_Click"/>
                 <MenuItem Header="查看日常记录..."
                           Click="OpenDailyRecords_Click"/>
-                <MenuItem Header="新增记录项..."
+                <MenuItem Header="新增/修改记录项..."
                           Click="OpenAddDailyRecord_Click"/>
             </MenuItem>
             <MenuItem Header="设置">
                 <MenuItem Header="API Key 设置..."
-                          Click="OnPlaceholderMenuItemClick"/>
+                          Click="OpenApiSettings_Click"/>
                 <MenuItem Header="关于 FloatTodo"
                           Click="OnPlaceholderMenuItemClick"/>
             </MenuItem>

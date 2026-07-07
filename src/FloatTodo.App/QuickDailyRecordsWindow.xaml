@@ -39,6 +39,11 @@
                                     <Run Text="最后记录时间："/>
                                     <Run Text="{Binding LastRecordTimeDisplay}"/>
                                 </TextBlock>
+                                <TextBlock Margin="0,2,0,0"
+                                           Foreground="#666">
+                                    <Run Text="提醒阈值："/>
+                                    <Run Text="{Binding ThresholdDisplay}"/>
+                                </TextBlock>
                             </StackPanel>
                             <TextBlock Grid.Column="1"
                                        Margin="12,0,0,0"

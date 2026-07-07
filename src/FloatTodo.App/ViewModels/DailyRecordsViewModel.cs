@@ -110,6 +110,29 @@ public sealed class DailyRecordsViewModel : INotifyPropertyChanged
         return true;
     }
 
+    /// <summary>
+    /// 修改已有日常记录的提醒阈值。
+    /// 只更新阈值和更新时间，不改变当天次数和最后记录时间，避免“编辑提醒”影响打卡数据。
+    /// </summary>
+    public bool UpdateRecordReminderThresholdByName(string name, int? reminderThresholdMinutes)
+    {
+        var trimmedName = name?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(trimmedName))
+        {
+            return false;
+        }
+
+        var record = Records.FirstOrDefault(r => string.Equals(r.Name, trimmedName, StringComparison.Ordinal));
+        if (record == null)
+        {
+            return false;
+        }
+
+        record.ReminderThresholdMinutes = reminderThresholdMinutes;
+        record.UpdatedAt = DateTime.Now;
+        return Save();
+    }
+
     public bool IncrementRecordByName(string name, string description, string iconText)
     {
         // 右键菜单的 +1 会调用这里。

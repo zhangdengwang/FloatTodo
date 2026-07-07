@@ -1,0 +1,59 @@
+<Window x:Class="FloatTodo.App.QuickApiSettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="API Key 设置"
+        Width="460"
+        Height="260"
+        WindowStartupLocation="CenterScreen"
+        Topmost="True"
+        ResizeMode="NoResize">
+    <Grid Margin="14">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="DeepSeek API Key"
+                   FontWeight="Bold"
+                   FontSize="14"/>
+        <PasswordBox x:Name="ApiKeyBox"
+                     Grid.Row="1"
+                     Margin="0,8,0,8"
+                     Height="30"
+                     VerticalContentAlignment="Center"/>
+
+        <TextBlock Grid.Row="2"
+                   Text="API Key 只保存到本地 data/local-settings.json，不会进入发布包或 Git。"
+                   TextWrapping="Wrap"
+                   Foreground="#666"
+                   FontSize="12"/>
+
+        <TextBlock x:Name="StatusText"
+                   Grid.Row="3"
+                   Margin="0,12,0,0"
+                   TextWrapping="Wrap"
+                   Foreground="#2F6B96"/>
+
+        <StackPanel Grid.Row="4"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right">
+            <Button Content="测试连接"
+                    Width="90"
+                    Height="30"
+                    Margin="0,0,8,0"
+                    Click="TestButton_Click"/>
+            <Button Content="保存"
+                    Width="80"
+                    Height="30"
+                    Margin="0,0,8,0"
+                    Click="SaveButton_Click"/>
+            <Button Content="关闭"
+                    Width="80"
+                    Height="30"
+                    Click="CloseButton_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

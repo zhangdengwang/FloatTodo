@@ -420,6 +420,19 @@ public partial class MiniWidgetWindow : Window
             MessageBoxImage.Information);
     }
 
+    /// <summary>
+    /// 打开轻量 API 设置窗口。
+    /// API Key 设置属于右键菜单的常用配置入口，不需要先打开完整主面板。
+    /// </summary>
+    private void OpenApiSettings_Click(object sender, RoutedEventArgs e)
+    {
+        var window = new QuickApiSettingsWindow
+        {
+            Owner = this
+        };
+        window.ShowDialog();
+    }
+
     private void OpenAiBreakdown_Click(object sender, RoutedEventArgs e)
     {
         var w = new QuickAiBreakdownWindow();
