@@ -60,11 +60,21 @@ public partial class QuickProjectListWindow : Window
             return;
         }
 
-        var window = new QuickProjectTasksWindow(project)
+        var window = new QuickProjectTasksWindow(project, RefreshAfterProjectTaskChanged)
         {
             Owner = this
         };
         window.Show();
+    }
+
+    private void RefreshAfterProjectTaskChanged()
+    {
+        RefreshProjects();
+
+        if (Owner is MiniWidgetWindow miniWidget)
+        {
+            miniWidget.RefreshPetState();
+        }
     }
 
     /// <summary>

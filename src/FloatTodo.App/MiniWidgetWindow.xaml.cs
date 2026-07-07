@@ -150,8 +150,26 @@ public partial class MiniWidgetWindow : Window
 
     private void OpenTaskList(QuickTaskFilter filter)
     {
-        // 任务列表在打开窗口前一次性读取并筛选，QuickTaskListWindow 只负责展示。
-        // 这样可以避免在窗口构造或 Loaded 中做阻塞读取，降低 UI 卡死风险。
+        // 任务列表由窗口按需重新加载，完成/删除后会刷新列表和桌宠红点。
+        // 加载过程仍然是一次性读取现有 JSON，不使用阻塞等待或循环轮询。
+        IReadOnlyCollection<QuickTaskListItem> LoadDisplayItems()
+        {
+            return BuildTaskListItems(filter);
+        }
+
+        var titleText = filter == QuickTaskFilter.Unfinished ? "未完成任务" : "快截止任务";
+        var emptyText = filter == QuickTaskFilter.Unfinished
+            ? "当前没有未完成任务。"
+            : "当前没有快截止任务。";
+        var window = new QuickTaskListWindow(titleText, emptyText, LoadDisplayItems, RefreshPetState)
+        {
+            Owner = this
+        };
+        window.Show();
+    }
+
+    private static IReadOnlyCollection<QuickTaskListItem> BuildTaskListItems(QuickTaskFilter filter)
+    {
         var tasks = new TaskStorageService().Load();
         var now = DateTime.Now;
         var dueSoonLimit = now.AddHours(24);
@@ -184,23 +202,36 @@ public partial class MiniWidgetWindow : Window
             }
 
             displayItems.Add(new QuickTaskListItem(
+                task.Id,
                 title,
                 task.Priority.ToString(),
+                task.DueTime,
                 dueTimeDisplay,
                 task.ProjectName,
                 task.Status == FloatTodo.App.Models.TaskStatus.Done ? "已完成" : "未完成",
                 task.Description));
         }
 
-        var titleText = filter == QuickTaskFilter.Unfinished ? "未完成任务" : "快截止任务";
-        var emptyText = filter == QuickTaskFilter.Unfinished
-            ? "当前没有未完成任务。"
-            : "当前没有快截止任务。";
-        var window = new QuickTaskListWindow(titleText, emptyText, displayItems)
+        return displayItems
+            .OrderBy(item => GetDueSortGroup(item.DueTime, now, dueSoonLimit))
+            .ThenBy(item => item.DueTime ?? DateTime.MaxValue)
+            .ThenBy(item => item.Title, StringComparer.CurrentCulture)
+            .ToList();
+    }
+
+    private static int GetDueSortGroup(DateTime? dueTime, DateTime now, DateTime dueSoonLimit)
+    {
+        if (!dueTime.HasValue)
         {
-            Owner = this
-        };
-        window.Show();
+            return 3;
+        }
+
+        if (dueTime.Value < now)
+        {
+            return 0;
+        }
+
+        return dueTime.Value <= dueSoonLimit ? 1 : 2;
     }
 
     private void OpenAddProject_Click(object sender, RoutedEventArgs e)

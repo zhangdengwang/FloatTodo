@@ -107,6 +107,43 @@ public sealed class TaskStorageService
         File.WriteAllText(_dataFilePath, json);
     }
 
+    /// <summary>
+    /// 将指定任务标记为完成并保存。
+    /// 快捷列表和项目小任务列表都复用这里，避免在窗口里复制 JSON 读写逻辑。
+    /// </summary>
+    public bool MarkCompleted(Guid taskId)
+    {
+        var tasks = Load();
+        var task = tasks.FirstOrDefault(item => item.Id == taskId && !item.IsProject);
+        if (task == null)
+        {
+            return false;
+        }
+
+        task.Status = FloatTodo.App.Models.TaskStatus.Done;
+        task.CompletedAt = DateTime.Now;
+        Save(tasks);
+        return true;
+    }
+
+    /// <summary>
+    /// 删除指定普通任务或项目小任务并保存。
+    /// 本方法不会删除项目父节点，也不会级联删除其他小任务。
+    /// </summary>
+    public bool DeleteTask(Guid taskId)
+    {
+        var tasks = Load();
+        var task = tasks.FirstOrDefault(item => item.Id == taskId && !item.IsProject);
+        if (task == null)
+        {
+            return false;
+        }
+
+        tasks.Remove(task);
+        Save(tasks);
+        return true;
+    }
+
     private static bool ContainsTaskWithoutId(string json)
     {
         // 这里直接检查原始 JSON 属性，而不是先反序列化。
