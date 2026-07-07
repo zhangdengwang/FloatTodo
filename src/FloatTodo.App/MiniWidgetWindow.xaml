@@ -12,7 +12,7 @@
         Background="Transparent"
         ResizeMode="NoResize"
         Topmost="True"
-        ShowInTaskbar="True"
+        ShowInTaskbar="False"
         WindowStartupLocation="CenterScreen"
         MouseMove="Window_MouseMove"
         MouseLeftButtonUp="Window_MouseLeftButtonUp"
@@ -65,8 +65,8 @@
                       Click="ExitMenuItem_Click"/>
         </ContextMenu>
     </Window.ContextMenu>
-    <Grid>
-        <Border Background="#22FFFFFF"
+    <Grid Background="Transparent">
+        <Border Background="Transparent"
                 CornerRadius="20"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
