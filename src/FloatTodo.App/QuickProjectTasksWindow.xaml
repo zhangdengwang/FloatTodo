@@ -7,7 +7,18 @@
         Topmost="True"
         ResizeMode="CanResize">
     <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock x:Name="ProjectDescriptionText"
+                   TextWrapping="Wrap"
+                   Foreground="#666"
+                   Margin="4,0,4,8"/>
+
         <TextBlock x:Name="EmptyText"
+                   Grid.Row="1"
                    Text="当前项目没有小任务"
                    Visibility="Collapsed"
                    FontSize="14"
@@ -16,6 +27,7 @@
                    Margin="0,8"/>
 
         <ListBox x:Name="TasksList"
+                 Grid.Row="1"
                  ScrollViewer.VerticalScrollBarVisibility="Auto">
             <ListBox.ItemTemplate>
                 <DataTemplate>
@@ -27,7 +39,9 @@
                             CornerRadius="8">
                         <StackPanel>
                             <TextBlock Text="{Binding Title}"
-                                       FontWeight="SemiBold"/>
+                                       FontWeight="SemiBold"
+                                       Cursor="Hand"
+                                       MouseLeftButtonUp="TaskTitle_MouseLeftButtonUp"/>
                             <TextBlock Margin="0,4,0,0">
                                 <Run Text="优先级："/>
                                 <Run Text="{Binding Priority}"/>
@@ -36,6 +50,10 @@
                             </TextBlock>
                             <TextBlock Text="{Binding DueTimeDisplay}"
                                        Foreground="#666"
+                                       Margin="0,3,0,0"/>
+                            <TextBlock Text="{Binding DescriptionPreview}"
+                                       Foreground="#666"
+                                       TextWrapping="Wrap"
                                        Margin="0,3,0,0"/>
                         </StackPanel>
                     </Border>

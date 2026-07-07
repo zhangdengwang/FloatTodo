@@ -35,7 +35,9 @@
                             <StackPanel>
                                 <TextBlock Text="{Binding Project.Title}"
                                            FontWeight="SemiBold"
-                                           FontSize="14"/>
+                                           FontSize="14"
+                                           Cursor="Hand"
+                                           MouseLeftButtonUp="ProjectTitle_MouseLeftButtonUp"/>
                                 <TextBlock Text="{Binding Project.Description}"
                                            Foreground="#666"
                                            TextWrapping="Wrap"

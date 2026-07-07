@@ -72,6 +72,10 @@ public sealed class TaskItem : INotifyPropertyChanged
         }
     }
 
+    /// <summary>
+    /// 任务详细内容 / 描述。
+    /// 可用于记录任务步骤、要求、备注；旧 JSON 中没有该字段时会按默认空字符串处理。
+    /// </summary>
     public string Description
     {
         get => _description;

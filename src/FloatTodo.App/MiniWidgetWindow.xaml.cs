@@ -186,7 +186,10 @@ public partial class MiniWidgetWindow : Window
             displayItems.Add(new QuickTaskListItem(
                 title,
                 task.Priority.ToString(),
-                dueTimeDisplay));
+                dueTimeDisplay,
+                task.ProjectName,
+                task.Status == FloatTodo.App.Models.TaskStatus.Done ? "已完成" : "未完成",
+                task.Description));
         }
 
         var titleText = filter == QuickTaskFilter.Unfinished ? "未完成任务" : "快截止任务";
@@ -251,7 +254,12 @@ public partial class MiniWidgetWindow : Window
         {
             Owner = this
         };
-        _quickDailyRecordsWindow.Closed += (_, _) => _quickDailyRecordsWindow = null;
+        _quickDailyRecordsWindow.Closed += (_, _) =>
+        {
+            _quickDailyRecordsWindow = null;
+            RefreshDailyRecordMenuHeaders();
+            RefreshDailyReminderState();
+        };
         _quickDailyRecordsWindow.Show();
     }
 

@@ -75,6 +75,10 @@
                             <StackPanel>
                                 <TextBlock Text="{Binding Title}"
                                            FontWeight="SemiBold"/>
+                                <TextBlock Text="{Binding Description}"
+                                           Foreground="#666"
+                                           TextWrapping="Wrap"
+                                           Margin="0,3,0,0"/>
                                 <TextBlock>
                                     <Run Text="优先级: "/>
                                     <Run Text="{Binding Priority}"/>

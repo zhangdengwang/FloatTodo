@@ -32,13 +32,19 @@
                             BorderThickness="1">
                         <StackPanel>
                             <TextBlock Text="{Binding Title}"
-                                       FontWeight="SemiBold"/>
-                            <TextBlock>
+                                       FontWeight="SemiBold"
+                                       Cursor="Hand"
+                                       MouseLeftButtonUp="TaskTitle_MouseLeftButtonUp"/>
+                            <TextBlock Margin="0,3,0,0">
                                 <Run Text="优先级: "/>
                                 <Run Text="{Binding Priority}"/>
                                 <Run Text="  |  截止: "/>
                                 <Run Text="{Binding DueTimeDisplay}"/>
                             </TextBlock>
+                            <TextBlock Text="{Binding DescriptionPreview}"
+                                       Foreground="#666"
+                                       TextWrapping="Wrap"
+                                       Margin="0,3,0,0"/>
                         </StackPanel>
                     </Border>
                 </DataTemplate>

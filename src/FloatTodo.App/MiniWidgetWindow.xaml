@@ -48,10 +48,10 @@
                 <MenuItem x:Name="StandUpMenuItem"
                           Header="起身活动 +1（次数：0，上次：未记录，阈值：90分钟）"
                           Click="StandUpMenuItem_Click"/>
-                <MenuItem Header="查看日常记录..."
-                          Click="OpenDailyRecords_Click"/>
                 <MenuItem Header="新增/修改记录项..."
                           Click="OpenAddDailyRecord_Click"/>
+                <MenuItem Header="管理日常记录..."
+                          Click="OpenDailyRecords_Click"/>
             </MenuItem>
             <MenuItem Header="设置">
                 <MenuItem Header="API Key 设置..."

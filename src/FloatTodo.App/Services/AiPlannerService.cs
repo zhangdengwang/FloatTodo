@@ -46,13 +46,14 @@ public sealed class AiPlannerService
         var systemPrompt =
             "你是一个项目任务拆解助手。用户会输入一个项目、作业或任务目标。请严格按照指定的 JSON 模式返回，不要输出多余文字或 Markdown。";
 
-        // userPrompt 中给出固定 JSON 模板，后续才能稳定反序列化成 AiPlanResult。
+        // userPrompt 中给出固定 JSON 模板，要求每个小任务包含 description。
+        // 这样 AI 生成的项目小任务不仅有标题，也能保存到 TaskItem.Description 供详情窗口展示。
         var userPrompt = new StringBuilder();
         userPrompt.AppendLine("请把下列项目拆解成 6 到 12 个可执行小任务。每个任务必须具体且可执行。输出必须是合法 JSON，且遵守下列结构：");
-        userPrompt.AppendLine("{\n  \"project_title\": \"...\",\n  \"project_summary\": \"...\",\n  \"tasks\": [ { \"title\": \"...\", \"description\": \"...\", \"phase\": \"规划|设计|实现|测试|文档|展示|其他\", \"priority\": \"Urgent|Important|Normal\", \"estimated_minutes\": 60, \"suggested_order\": 1 } ],\n  \"risks\": [ \"...\" ]\n}");
+        userPrompt.AppendLine("{\n  \"project_title\": \"...\",\n  \"project_summary\": \"...\",\n  \"tasks\": [ { \"title\": \"...\", \"description\": \"写清楚该小任务的具体步骤、验收标准或注意事项\", \"phase\": \"规划|设计|实现|测试|文档|展示|其他\", \"priority\": \"Urgent|Important|Normal\", \"estimated_minutes\": 60, \"suggested_order\": 1, \"dueTime\": null } ],\n  \"risks\": [ \"...\" ]\n}");
         userPrompt.AppendLine();
         userPrompt.AppendLine("约束：");
-        userPrompt.AppendLine("1) 不要输出 Markdown 或解释性文本，2) 只输出 JSON，3) priority 只能为 Urgent、Important 或 Normal，4) estimated_minutes 必须是整数，5) phase 必须从 规划, 设计, 实现, 测试, 文档, 展示, 其他 中选择，6) suggested_order 从 1 开始递增。\n");
+        userPrompt.AppendLine("1) 不要输出 Markdown 或解释性文本，2) 只输出 JSON，3) 每个任务必须包含非空 description，4) priority 只能为 Urgent、Important 或 Normal，5) estimated_minutes 必须是整数，6) phase 必须从 规划, 设计, 实现, 测试, 文档, 展示, 其他 中选择，7) suggested_order 从 1 开始递增。\n");
         userPrompt.AppendLine("用户输入：");
         userPrompt.AppendLine(projectDescription);
 
@@ -113,7 +114,7 @@ public sealed class AiPlannerService
                 throw new Exception("AI 返回内容为空。请检查模型输出。\n");
 
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-            var plan = JsonSerializer.Deserialize<AiPlanResult>(message, options);
+            var plan = DeserializePlan(message, options);
             if (plan is null || plan.Tasks is null)
                 throw new Exception("AI 返回格式异常，请重新尝试。");
 
@@ -152,12 +153,34 @@ public sealed class AiPlannerService
 
         var firstBrace = content.IndexOf('{');
         var lastBrace = content.LastIndexOf('}');
-        if (firstBrace >= 0 && lastBrace > firstBrace)
+        var firstBracket = content.IndexOf('[');
+        var lastBracket = content.LastIndexOf(']');
+
+        if (firstBracket >= 0 &&
+            lastBracket > firstBracket &&
+            (firstBrace < 0 || firstBracket < firstBrace))
+        {
+            content = content[firstBracket..(lastBracket + 1)].Trim();
+        }
+        else if (firstBrace >= 0 && lastBrace > firstBrace)
         {
             content = content[firstBrace..(lastBrace + 1)].Trim();
         }
 
         return content;
+    }
+
+    private static AiPlanResult? DeserializePlan(string message, JsonSerializerOptions options)
+    {
+        if (message.TrimStart().StartsWith("[", StringComparison.Ordinal))
+        {
+            var tasks = JsonSerializer.Deserialize<List<AiPlanTask>>(message, options);
+            return tasks is null
+                ? null
+                : new AiPlanResult { Tasks = tasks };
+        }
+
+        return JsonSerializer.Deserialize<AiPlanResult>(message, options);
     }
 
     private static string? GetApiKey(ApiSettings settings)

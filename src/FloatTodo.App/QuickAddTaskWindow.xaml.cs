@@ -64,6 +64,7 @@ public partial class QuickAddTaskWindow : Window
         var task = new TaskItem
         {
             Title = title,
+            Description = DescriptionTextBox.Text.Trim(),
             Priority = priority,
             DueTime = dueTime,
             Status = FloatTodo.App.Models.TaskStatus.Todo,

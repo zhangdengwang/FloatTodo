@@ -18,6 +18,7 @@ public sealed class CandidateTask : INotifyPropertyChanged
     public int EstimatedMinutes { get; set; }
     public string Phase { get; set; } = string.Empty;
     public int SuggestedOrder { get; set; }
+    public DateTime? DueTime { get; set; }
 
     /// <summary>
     /// Whether the user has checked this candidate for adding to the todo list.

@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using FloatTodo.App.Models;
 using FloatTodo.App.Services;
 
@@ -64,6 +65,31 @@ public partial class QuickProjectListWindow : Window
             Owner = this
         };
         window.Show();
+    }
+
+    /// <summary>
+    /// 点击项目名称查看项目详情。
+    /// 项目本身仍是 IsProject=true 的 TaskItem，详情窗口只读展示项目 Description。
+    /// </summary>
+    private void ProjectTitle_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is not TextBlock { DataContext: ProjectListDisplayItem { Project: var project } })
+        {
+            return;
+        }
+
+        var detail = new QuickTaskDetailWindow(new TaskDetailDisplayItem(
+            project.Title,
+            project.Priority.ToString(),
+            project.DueTime.HasValue ? project.DueTime.Value.ToString("yyyy-MM-dd HH:mm") : "无截止时间",
+            string.Empty,
+            project.Status == FloatTodo.App.Models.TaskStatus.Done ? "已完成" : "未完成",
+            project.Description))
+        {
+            Owner = this
+        };
+        detail.Show();
+        e.Handled = true;
     }
 
     private void AddTaskButton_Click(object sender, RoutedEventArgs e)

@@ -41,4 +41,7 @@ public sealed class AiPlanTask
 
     [JsonPropertyName("suggested_order")]
     public int SuggestedOrder { get; set; }
+
+    [JsonPropertyName("dueTime")]
+    public DateTime? DueTime { get; set; }
 }

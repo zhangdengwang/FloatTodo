@@ -116,14 +116,18 @@ public sealed class AiPlannerViewModel : INotifyPropertyChanged
             // 此时只进入候选列表，不立即写入任务 JSON，避免把用户不想要的 AI 输出保存下来。
             foreach (var t in plan.Tasks)
             {
+                var description = string.IsNullOrWhiteSpace(t.Description)
+                    ? $"完成“{t.Title}”相关工作，并补充必要步骤、要求和验收结果。"
+                    : t.Description.Trim();
                 var candidate = new CandidateTask
                 {
                     Title = t.Title,
-                    Description = t.Description,
+                    Description = description,
                     Phase = t.Phase,
                     EstimatedMinutes = t.EstimatedMinutes,
                     SuggestedOrder = t.SuggestedOrder,
-                    Priority = ParsePriority(t.Priority)
+                    Priority = ParsePriority(t.Priority),
+                    DueTime = t.DueTime
                 };
 
                 Candidates.Add(candidate);
@@ -200,7 +204,7 @@ public sealed class AiPlannerViewModel : INotifyPropertyChanged
                 Priority = c.Priority,
                 Status = FloatTodo.App.Models.TaskStatus.Todo,
                 CreatedAt = DateTime.Now,
-                DueTime = null,
+                DueTime = c.DueTime,
                 IsProject = false,
                 ParentId = projectId,
                 ProjectId = projectId,
